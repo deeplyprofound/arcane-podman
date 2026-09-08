@@ -94,6 +94,22 @@ REGISTRY: list[Drift] = [
         citation="live capture; InAction:1794-1796",
     ),
     Drift(
+        id="rootless-ports",
+        area="container",
+        summary="Publishing privileged host ports (<1024) on rootless (D4)",
+        docker="rootful: binds <1024 fine",
+        podman="rootless: start fails binding <1024 unless ip_unprivileged_port_start lowered",
+        citation="DevOps:16437-16439; InAction:2038-2044",
+    ),
+    Drift(
+        id="restart-policy",
+        area="container",
+        summary="Restart policy name over the compat API (D5 — moot)",
+        docker="unless-stopped preserved",
+        podman="compat PRESERVES the name (unless-stopped stays); the ==always mapping is runtime/systemd only",
+        citation="live capture — corrects book claim of unless-stopped==always",
+    ),
+    Drift(
         id="storage-driver",
         area="system",
         summary="Info.Driver + DockerRootDir",

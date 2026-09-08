@@ -164,6 +164,8 @@ def build_app(profile_name: str, db_url: str = "sqlite+pysqlite:///:memory:") ->
             return Response(status_code=204)
         except NotFound:
             return nf(ref)
+        except Conflict as e:
+            return JSONResponse({"message": str(e)}, status_code=500)  # engines 500 on port-bind failure
 
     @app.post("/containers/{ref}/stop")
     def container_stop(ref: str):

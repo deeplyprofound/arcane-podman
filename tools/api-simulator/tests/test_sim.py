@@ -183,3 +183,33 @@ def test_events_recorded(podman):
     lines = [ln for ln in podman.get("/events").text.splitlines() if ln.strip()]
     actions = [__import__("json").loads(ln)["Action"] for ln in lines]
     assert "create" in actions
+
+
+# ------------------------------------------------------------------ D4 rootless ports
+def _publish(port):
+    return {"Image": "alpine:latest", "HostConfig": {"PortBindings": {f"{port}/tcp": [{"HostPort": str(port)}]}}}
+
+
+def test_rootless_cannot_publish_privileged_port(podman):
+    podman.post("/containers/create?name=p80", json=_publish(80))
+    r = podman.post("/containers/p80/start")
+    assert r.status_code == 500 and "privileged port" in r.json()["message"]  # D4
+
+
+def test_rootless_can_publish_high_port(podman):
+    podman.post("/containers/create?name=p8080", json=_publish(8080))
+    assert podman.post("/containers/p8080/start").status_code == 204
+
+
+def test_docker_can_publish_privileged_port(docker):
+    docker.post("/containers/create?name=d80", json=_publish(80))
+    assert docker.post("/containers/d80/start").status_code == 204  # rootful
+
+
+# ------------------------------------------------------------------ D5 restart policy (moot)
+def test_restart_policy_name_preserved(podman):
+    for pol in ("unless-stopped", "always", "on-failure", "no"):
+        podman.post(f"/containers/create?name=rp_{pol.replace('-', '_')}",
+                    json={"Image": "alpine:latest", "HostConfig": {"RestartPolicy": {"Name": pol}}})
+        got = podman.get(f"/containers/rp_{pol.replace('-', '_')}/json").json()["HostConfig"]["RestartPolicy"]["Name"]
+        assert got == pol  # compat preserves the name verbatim (D5 moot)

@@ -243,6 +243,14 @@ class Store:
         iso, _, _ = _now()
         with session_scope(self.maker) as s:
             c = self._get_container(s, ref)
+            # D4: rootless engines cannot bind privileged host ports (<1024).
+            # The failure surfaces at START (the port bind), not create — model that.
+            if self.profile.rootless:
+                for spec in (c.host_config.get("PortBindings") or {}).values():
+                    for binding in spec or []:
+                        hp = str(binding.get("HostPort", ""))
+                        if hp.isdigit() and int(hp) < 1024:
+                            raise Conflict(f"rootless containers cannot publish privileged port {hp} (<1024); use a high port or set net.ipv4.ip_unprivileged_port_start")
             c.state, c.started_at = "running", iso
             self._emit(s, "container", "start", c.id, {"image": c.image, "name": c.name})
 
