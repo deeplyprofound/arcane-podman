@@ -213,3 +213,21 @@ def test_restart_policy_name_preserved(podman):
                     json={"Image": "alpine:latest", "HostConfig": {"RestartPolicy": {"Name": pol}}})
         got = podman.get(f"/containers/rp_{pol.replace('-', '_')}/json").json()["HostConfig"]["RestartPolicy"]["Name"]
         assert got == pol  # compat preserves the name verbatim (D5 moot)
+
+
+# ------------------------------------------------------------------ registry <-> behavior
+def test_documented_drifts_are_observably_different(podman, docker):
+    """Every drift with a checkable endpoint must actually diverge between the
+    two profiles — keeps drift.py honest against the sim's behavior."""
+    checks = {
+        "buildkit-header": lambda c: c.get("/_ping").headers.get("buildkit-version", ""),
+        "swarm-absent": lambda c: c.get("/swarm").status_code,
+        "buildkit-session": lambda c: c.post("/session").status_code,
+        "rootless-identity": lambda c: any("rootless" in o for o in c.get("/info").json()["SecurityOptions"]),
+        "selinux": lambda c: any("selinux" in o for o in c.get("/info").json()["SecurityOptions"]),
+        "storage-driver": lambda c: c.get("/info").json()["Driver"],
+    }
+    registered = {d.id for d in drift_mod.REGISTRY}
+    for did, probe in checks.items():
+        assert did in registered, f"{did} missing from drift registry"
+        assert probe(docker) != probe(podman), f"drift {did}: profiles do not diverge"
