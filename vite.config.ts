@@ -10,7 +10,6 @@ export default defineConfig({
 		ignorePatterns: [
 			'.arcane.json',
 			'.config/**',
-			'.depot/**',
 			'.devcontainer/**',
 			'.github/**',
 			'.vscode/**',
@@ -19,10 +18,7 @@ export default defineConfig({
 			'server/database/**',
 			'clients/cli/**',
 			'pipes/deployment/**',
-			'docs/CHANGELOG.md',
 			'docs/**',
-			'cliff.toml',
-			'depot.json',
 			'pnpm-lock.yaml',
 			'clients/webapp/svelte/.svelte-kit/**',
 			'clients/webapp/svelte/build/**',

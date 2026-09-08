@@ -48,5 +48,7 @@ translated. Watch for:
 - **frontend types** — we generate `clients/webapp/svelte/src/lib/types/api.ts`
   from the huma OpenAPI spec (`just typegen`); don't hand-port upstream's
   hand-written `src/lib/types` changes — regenerate instead.
-- **CI** — upstream edits `.github/workflows` and `.depot/workflows`; both exist
-  here with rewired paths.
+- **CI** — this fork uses `.github/workflows` only. Upstream also maintains a
+  `.depot/` CI system (Depot-hosted); we deleted it (dead without a Depot
+  account). Skip upstream's `.depot/` changes, or port them into
+  `.github/workflows` if you set up Depot.
