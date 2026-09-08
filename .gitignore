@@ -6,8 +6,8 @@ node_modules
 .netlify
 .wrangler
 .svelte-kit
-frontend/.svelte-kit
-frontend/build
+clients/webapp/svelte/.svelte-kit
+clients/webapp/svelte/build
 /build
 data/
 dist/
@@ -41,24 +41,24 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 #tests data
-tests/test-results/*
-tests/.report/*
-tests/.auth/
-tests/.bin/
-tests/setup/projects/*
-!tests/setup/projects/test-project-static/
-!tests/setup/projects/test-project-static/**
-backend/test-results/
-cli/test-results/
-types/test-results/
-backend/.bin
-backend/build-errors.log
+pipes/gates/test-results/*
+pipes/gates/.report/*
+pipes/gates/.auth/
+pipes/gates/.bin/
+pipes/gates/setup/projects/*
+!pipes/gates/setup/projects/test-project-static/
+!pipes/gates/setup/projects/test-project-static/**
+server/backend/test-results/
+clients/cli/test-results/
+server/types/test-results/
+server/backend/.bin
+server/backend/build-errors.log
 /.idea/**
 .pnpm-store/**
 .pnpm-store
 *.out
 
-cli/arcane-cli
+clients/cli/arcane-cli
 completions
 *.txt
 inspections/**

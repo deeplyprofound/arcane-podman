@@ -14,10 +14,11 @@ export default defineConfig({
 			'.devcontainer/**',
 			'.github/**',
 			'.vscode/**',
-			'backend/**',
-			'cli/**',
-			'docker/**',
-			'types/**',
+			'server/backend/**',
+			'server/types/**',
+			'server/database/**',
+			'clients/cli/**',
+			'pipes/deployment/**',
 			'AI_POLICY.md',
 			'CHANGELOG.md',
 			'CONTRIBUTING.md',
@@ -25,25 +26,25 @@ export default defineConfig({
 			'cliff.toml',
 			'depot.json',
 			'pnpm-lock.yaml',
-			'frontend/.svelte-kit/**',
-			'frontend/build/**',
-			'frontend/messages/**',
-			'frontend/project.inlang/**',
-			'frontend/src/lib/paraglide/**',
-			'tests/.auth/**',
-			'tests/.bin/**',
-			'tests/.report/**',
-			'tests/test-results/**'
+			'clients/webapp/svelte/.svelte-kit/**',
+			'clients/webapp/svelte/build/**',
+			'clients/webapp/svelte/messages/**',
+			'clients/webapp/svelte/project.inlang/**',
+			'clients/webapp/svelte/src/lib/paraglide/**',
+			'pipes/gates/.auth/**',
+			'pipes/gates/.bin/**',
+			'pipes/gates/.report/**',
+			'pipes/gates/test-results/**'
 		],
 		overrides: [
 			{
-				files: ['frontend/**'],
+				files: ['clients/webapp/svelte/**'],
 				options: {
 					printWidth: 130,
 					sortPackageJson: false,
 					svelte: true,
 					sortTailwindcss: {
-						stylesheet: './frontend/src/routes/layout.css',
+						stylesheet: './clients/webapp/svelte/src/routes/layout.css',
 						attributes: ['class'],
 						functions: ['clsx', 'cn'],
 						preserveWhitespace: true
@@ -53,12 +54,12 @@ export default defineConfig({
 		]
 	},
 	staged: {
-		'frontend/**/*': "sh -c 'just format frontend --check'",
-		'{tests,email-templates}/**/*.{ts,tsx,js,jsx,mts,cts}': "sh -c 'just format js --check'",
-		'{backend,cli,types}/**/*': "sh -c 'just format go --check'"
+		'clients/webapp/svelte/**/*': "sh -c 'just format frontend --check'",
+		'{pipes/gates,email-templates}/**/*.{ts,tsx,js,jsx,mts,cts}': "sh -c 'just format js --check'",
+		'{server/backend,server/types,server/database,clients/cli}/**/*': "sh -c 'just format go --check'"
 	},
 	test: {
-		exclude: ['**/node_modules/**', 'tests/**'],
+		exclude: ['**/node_modules/**', 'pipes/gates/**'],
 		passWithNoTests: true
 	},
 	lint: {

@@ -23,18 +23,18 @@ jobs:
       fail-fast: false
       matrix:
         module:
-          - name: backend
-            path: backend
+          - name: server/backend
+            path: server/backend
             timeout: 30
             gcc: true
             cgo_enabled: "1"
-          - name: cli
-            path: cli
+          - name: clients/cli
+            path: clients/cli
             timeout: 10
             gcc: false
             cgo_enabled: "1"
-          - name: types
-            path: types
+          - name: server/types
+            path: server/types
             timeout: 10
             gcc: false
             cgo_enabled: "1"
@@ -93,12 +93,12 @@ jobs:
       fail-fast: false
       matrix:
         module:
-          - name: backend
-            args: --build-tags=exclude_frontend --config=../.github/.golangci.yml
-          - name: cli
-            args: --config=../.github/.golangci.yml
-          - name: types
-            args: --config=../.github/.golangci.yml
+          - name: server/backend
+            args: --build-tags=exclude_frontend --config=../../.github/.golangci.yml
+          - name: clients/cli
+            args: --config=../../.github/.golangci.yml
+          - name: server/types
+            args: --config=../../.github/.golangci.yml
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -188,7 +188,7 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml', 'tests/package.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml', 'pipes/gates/package.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 
@@ -202,7 +202,7 @@ jobs:
         run: just deps install tests
 
       - name: Run Playwright E2E tests
-        run: mkdir -p tests/test-results && vp -C tests exec playwright test --project=chromium
+        run: mkdir -p pipes/gates/test-results && vp -C pipes/gates exec playwright test --project=chromium
         env:
           COMPOSE_FILE: ${{ matrix.database.compose_file }}
           BASE_URL: http://localhost:${{ matrix.database.port }}
@@ -213,7 +213,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report-${{ matrix.database.name }}
-          path: tests/.report
+          path: pipes/gates/.report
           include-hidden-files: true
           retention-days: 15
 
@@ -221,7 +221,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: depot/test-report-action@v1
         with:
-          path: tests/test-results/
+          path: pipes/gates/test-results/
 
   cli-e2e-tests:
     name: CLI E2E Tests (proxy)
@@ -244,9 +244,9 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: cli/go.mod
+          go-version-file: clients/cli/go.mod
           cache: true
-          cache-dependency-path: cli/go.sum
+          cache-dependency-path: clients/cli/go.sum
 
       - name: Set up Depot CLI
         uses: depot/setup-action@v1
@@ -254,10 +254,10 @@ jobs:
           configure-docker: true
 
       - name: Install Playwright test dependencies
-        run: vp -C tests install
+        run: vp -C pipes/gates install
 
       - name: Run CLI E2E tests against socket proxy
-        run: mkdir -p tests/test-results && vp -C tests exec playwright test --project=cli
+        run: mkdir -p pipes/gates/test-results && vp -C pipes/gates exec playwright test --project=cli
         env:
           COMPOSE_FILE: setup/compose-proxy.yaml
           BASE_URL: http://localhost:3002
@@ -268,7 +268,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report-proxy-cli
-          path: tests/.report
+          path: pipes/gates/.report
           include-hidden-files: true
           retention-days: 15
 
@@ -276,4 +276,4 @@ jobs:
         if: ${{ !cancelled() }}
         uses: depot/test-report-action@v1
         with:
-          path: tests/test-results/
+          path: pipes/gates/test-results/

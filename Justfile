@@ -4,7 +4,7 @@
 
 set working-directory := './'
 
-edge_proto_dir := 'backend/proto'
+edge_proto_dir := 'server/backend/proto'
 
 _default:
     @just --list
@@ -16,12 +16,12 @@ _default:
 # Run frontend dev server on port 3000
 [group('dev')]
 _dev-frontend:
-    vp -C frontend run dev
+    vp -C clients/webapp/svelte run dev
 
 # Run backend with hot reload on port 3552
 [group('dev')]
 _dev-backend:
-    cd backend && air
+    cd server/backend && air
 
 [group('dev')]
 _dev-agent:
@@ -37,7 +37,7 @@ _dev-agent:
     app_url="${APP_URL:-http://localhost:${port}}"
     manager_api_url="${MANAGER_API_URL:-https://localhost:3552}"
     edge_mtls_assets_dir="${EDGE_MTLS_ASSETS_DIR:-./.tmp/edge-test-agent/edge-mtls-agent}"
-    edge_mtls_ca_file="${EDGE_MTLS_CA_FILE:-./backend/local-manager.crt}"
+    edge_mtls_ca_file="${EDGE_MTLS_CA_FILE:-./server/backend/local-manager.crt}"
     database_url="${DATABASE_URL:-file:./.tmp/edge-test-agent/arcane.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(2500)&_txlock=immediate}"
     projects_directory="${PROJECTS_DIRECTORY:-./.tmp/edge-test-agent/projects}"
     git_work_dir="${GIT_WORK_DIR:-./.tmp/edge-test-agent/git}"
@@ -60,14 +60,14 @@ _dev-agent:
     GIT_WORK_DIR="${git_work_dir}" \
     JWT_SECRET="${jwt_secret}" \
     ENCRYPTION_KEY="${encryption_key}" \
-    go run ./backend/cmd
+    go run ./server/backend/cmd
 
 [group('dev')]
 _dev-all:
     #!/usr/bin/env bash
     trap 'kill 0' EXIT
-    (cd backend && air) &
-    vp -C frontend run dev
+    (cd server/backend && air) &
+    vp -C clients/webapp/svelte run dev
 
 # Rebuild Docker dev environment
 [group('dev')]
@@ -98,16 +98,16 @@ dev-tls force="false":
     #!/usr/bin/env bash
     set -euo pipefail
 
-    cert_path="./backend/local-manager.crt"
-    key_path="./backend/local-manager.key"
+    cert_path="./server/backend/local-manager.crt"
+    key_path="./server/backend/local-manager.key"
 
     if [ "{{ force }}" != "true" ] && [ -f "${cert_path}" ] && [ -f "${key_path}" ]; then
         echo "Cert already exists at ${cert_path}; pass force=true to regenerate."
         exit 0
     fi
 
-    go run ./cli generate tls \
-        --out-dir ./backend \
+    go run ./clients/cli generate tls \
+        --out-dir ./server/backend \
         --cert-name "$(basename "${cert_path}")" \
         --key-name "$(basename "${key_path}")" \
         --common-name arcane-local-manager \
@@ -133,12 +133,12 @@ dev-tls force="false":
 # Build the frontend
 [group('build')]
 _build-frontend:
-    vp -C frontend run build
+    vp -C clients/webapp/svelte run build
 
 # Build the backend
 [group('build')]
 _build-backend:
-    cd backend && go build ./...
+    cd server/backend && go build ./...
 
 # Build both frontend and backend
 [group('build')]
@@ -149,12 +149,12 @@ _build-all:
 # Build manager container image
 [group('build')]
 _build-image-manager tag="ghcr.io/getarcaneapp/arcane:development" flag='':
-    docker buildx build {{ if flag == "--push" { "--push" } else { "" } }} --platform linux/arm64,linux/amd64,linux/arm/v7 -f 'docker/Dockerfile' --build-arg ENABLED_FEATURES="{{ env('ENABLED_FEATURES', env('BUILD_FEATURES', '')) }}" -t "{{ tag }}" .
+    docker buildx build {{ if flag == "--push" { "--push" } else { "" } }} --platform linux/arm64,linux/amd64,linux/arm/v7 -f 'pipes/deployment/docker/Dockerfile' --build-arg ENABLED_FEATURES="{{ env('ENABLED_FEATURES', env('BUILD_FEATURES', '')) }}" -t "{{ tag }}" .
 
 # Build agent container image
 [group('build')]
 _build-image-agent tag="ghcr.io/getarcaneapp/agent:development" flag='':
-    docker buildx build {{ if flag == "--push" { "--push" } else { "" } }} --platform linux/arm64,linux/amd64,linux/arm/v7 -f 'docker/Dockerfile-agent' --build-arg ENABLED_FEATURES="{{ env('ENABLED_FEATURES', env('BUILD_FEATURES', '')) }}" -t "{{ tag }}" .
+    docker buildx build {{ if flag == "--push" { "--push" } else { "" } }} --platform linux/arm64,linux/amd64,linux/arm/v7 -f 'pipes/deployment/docker/Dockerfile-agent' --build-arg ENABLED_FEATURES="{{ env('ENABLED_FEATURES', env('BUILD_FEATURES', '')) }}" -t "{{ tag }}" .
 
 # Build targets:
 #   just build single {frontend|backend|all}
@@ -173,7 +173,7 @@ build buildtype type="" tag="" flag="":
 # Run Playwright E2E tests
 [group('test')]
 _test-e2e:
-    vp -C tests run test
+    vp -C pipes/gates run test
 
 # Run backend Go tests
 [group('test')]
@@ -181,7 +181,7 @@ _test-backend:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    cd backend
+    cd server/backend
     if [ -n "${GO_JUNIT_REPORT_FILE:-}" ]; then
         mkdir -p "$(dirname "$GO_JUNIT_REPORT_FILE")"
         go test -json -tags=exclude_frontend,buildables -ldflags "-X github.com/getarcaneapp/arcane/backend/v2/buildables.EnabledFeatures=autologin" ./... -race -coverprofile=coverage.txt -covermode=atomic -v 2>&1 | go run github.com/jstemmer/go-junit-report/v2@v2.1.0 -parser gojson -set-exit-code -out "$GO_JUNIT_REPORT_FILE"
@@ -195,7 +195,7 @@ _test-cli:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    cd cli
+    cd clients/cli
     if [ -n "${GO_JUNIT_REPORT_FILE:-}" ]; then
         mkdir -p "$(dirname "$GO_JUNIT_REPORT_FILE")"
         go test -json ./... -race -coverprofile=coverage.txt -covermode=atomic -v 2>&1 | go run github.com/jstemmer/go-junit-report/v2@v2.1.0 -parser gojson -set-exit-code -out "$GO_JUNIT_REPORT_FILE"
@@ -209,7 +209,7 @@ _test-types:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    cd types
+    cd server/types
     if [ -n "${GO_JUNIT_REPORT_FILE:-}" ]; then
         mkdir -p "$(dirname "$GO_JUNIT_REPORT_FILE")"
         go test -json ./... -race -coverprofile=coverage.txt -covermode=atomic -v 2>&1 | go run github.com/jstemmer/go-junit-report/v2@v2.1.0 -parser gojson -set-exit-code -out "$GO_JUNIT_REPORT_FILE"
@@ -245,9 +245,9 @@ _format-js:
 
 [group('quality')]
 _format-go:
-    cd backend && gofmt -s -w .
-    cd cli && gofmt -s -w .
-    cd types && gofmt -s -w .
+    cd server/backend && gofmt -s -w .
+    cd clients/cli && gofmt -s -w .
+    cd server/types && gofmt -s -w .
 
 [group('quality')]
 _format-just:
@@ -267,7 +267,7 @@ _format-check-go:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    unformatted=$(gofmt -l backend cli types)
+    unformatted=$(gofmt -l server/backend clients/cli server/types)
     if [ -n "$unformatted" ]; then
         echo "Unformatted Go files:"
         echo "$unformatted"
@@ -298,12 +298,12 @@ format target="all" check="":
 # Type check/Lint frontend
 [group('quality')]
 _lint-frontend:
-    vp -C frontend run check
+    vp -C clients/webapp/svelte run check
 
 # Type check Playwright tests
 [group('quality')]
 _lint-tests:
-    vp -C tests run check
+    vp -C pipes/gates run check
 
 # Type check email templates
 [group('quality')]
@@ -325,17 +325,17 @@ _build-golangci-lint:
 # Lint Go backend
 [group('quality')]
 _lint-backend: _build-golangci-lint
-    cd backend && ../.bin/golangci-lint-custom run -c ../.github/.golangci.yml ./...
+    cd server/backend && ../../.bin/golangci-lint-custom run -c ../../.github/.golangci.yml ./...
 
 # Lint Go CLI
 [group('quality')]
 _lint-cli: _build-golangci-lint
-    cd cli && ../.bin/golangci-lint-custom run -c ../.github/.golangci.yml ./...
+    cd clients/cli && ../../.bin/golangci-lint-custom run -c ../../.github/.golangci.yml ./...
 
 # Lint Types
 [group('quality')]
 _lint-types: _build-golangci-lint
-    cd types && ../.bin/golangci-lint-custom run -c ../.github/.golangci.yml ./...
+    cd server/types && ../../.bin/golangci-lint-custom run -c ../../.github/.golangci.yml ./...
 
 # Lint edge tunnel protobuf definitions.
 [group('quality')]
@@ -360,17 +360,17 @@ lint target="all":
 # Fix Go backend
 [group('quality')]
 _fix-backend:
-    cd backend && go fix ./...
+    cd server/backend && go fix ./...
 
 # Fix Go CLI
 [group('quality')]
 _fix-cli:
-    cd cli && go fix ./...
+    cd clients/cli && go fix ./...
 
 # Fix Types
 [group('quality')]
 _fix-types:
-    cd types && go fix ./...
+    cd server/types && go fix ./...
 
 # Fix all Go code
 [group('quality')]
@@ -414,30 +414,30 @@ _deps-install-frontend:
 # Install tests dependencies
 [group('deps')]
 _deps-install-tests:
-    vp -C tests install
+    vp -C pipes/gates install
     # --with-deps shells out to apt-get, so skip it on non-Debian systems
     if command -v apt-get >/dev/null 2>&1; then \
-        vp -C tests exec playwright install --with-deps chromium firefox; \
+        vp -C pipes/gates exec playwright install --with-deps chromium firefox; \
     else \
-        vp -C tests exec playwright install chromium firefox; \
+        vp -C pipes/gates exec playwright install chromium firefox; \
     fi
 
 # Install backend Go dependencies
 [group('deps')]
 _deps-install-backend:
-    cd backend && go mod download && go mod tidy && go mod verify
+    cd server/backend && go mod download && go mod tidy && go mod verify
     go work sync
 
 # Install CLI Go dependencies
 [group('deps')]
 _deps-install-cli:
-    cd cli && go mod download && go mod tidy && go mod verify
+    cd clients/cli && go mod download && go mod tidy && go mod verify
     go work sync
 
 # Install types Go dependencies
 [group('deps')]
 _deps-install-types:
-    cd types && go mod download && go mod tidy && go mod verify
+    cd server/types && go mod download && go mod tidy && go mod verify
     go work sync
 
 # Install all Go dependencies
@@ -460,7 +460,7 @@ _deps-update-frontend:
 # Update backend Go dependencies
 [group('deps')]
 _deps-update-backend:
-    cd backend && go get -u ./... && go mod tidy
+    cd server/backend && go get -u ./... && go mod tidy
 
 # Update pnpm version via corepack
 [group('deps')]
@@ -484,6 +484,41 @@ deps action="update" target="all":
     @just "_deps-{{ action }}-{{ target }}"
 
 # -----------------------------------------------------------------------------
+# Database migrations (goose; paired sqlite + postgres in server/database)
+# -----------------------------------------------------------------------------
+
+# Scaffold a new paired migration (sqlite + postgres) with the next sequence number.
+[group('db')]
+db-new name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sqlite_dir="server/database/migrations/sqlite"
+    pg_dir="server/database/migrations/postgres"
+    last=$(ls "$sqlite_dir" | grep -oE '^[0-9]+' | sort -n | tail -1)
+    next=$(printf '%03d' $((10#$last + 1)))
+    slug=$(echo "{{ name }}" | tr '[:upper:] ' '[:lower:]_' | tr -cd 'a-z0-9_')
+    template='-- +goose Up\n-- +goose StatementBegin\n\n-- +goose StatementEnd\n\n-- +goose Down\n-- +goose StatementBegin\n\n-- +goose StatementEnd\n'
+    for dir in "$sqlite_dir" "$pg_dir"; do
+        file="$dir/${next}_${slug}.sql"
+        printf "$template" > "$file"
+        echo "created $file"
+    done
+
+# Show migration counts/latest, plus applied version from the local dev sqlite DB.
+[group('db')]
+db-status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sqlite_dir="server/database/migrations/sqlite"
+    pg_dir="server/database/migrations/postgres"
+    echo "sqlite   migrations: $(ls "$sqlite_dir"/*.sql | wc -l | tr -d ' ') (latest $(ls "$sqlite_dir" | grep -oE '^[0-9]+' | sort -n | tail -1))"
+    echo "postgres migrations: $(ls "$pg_dir"/*.sql | wc -l | tr -d ' ') (latest $(ls "$pg_dir" | grep -oE '^[0-9]+' | sort -n | tail -1))"
+    db="server/backend/data/arcane.db"
+    if command -v sqlite3 >/dev/null 2>&1 && [ -f "$db" ]; then
+        echo "applied (dev sqlite): $(sqlite3 "$db" 'SELECT MAX(version_id) FROM goose_db_version;' 2>/dev/null || echo 'n/a')"
+    fi
+
+# -----------------------------------------------------------------------------
 # Code generation and docs
 # -----------------------------------------------------------------------------
 
@@ -504,7 +539,7 @@ _docs-config output="" source_root=".":
     #!/usr/bin/env bash
     set -euo pipefail
 
-    cmd=(go run -tags exclude_frontend ./backend/cmd config-schema --source-root "{{ source_root }}")
+    cmd=(go run -tags exclude_frontend ./server/backend/cmd config-schema --source-root "{{ source_root }}")
     if [ -n "{{ output }}" ]; then
         cmd+=(--output "{{ output }}")
     fi
@@ -524,7 +559,7 @@ docs target *args:
 
 # just i18n-add es "Español"
 [group('i18n')]
-i18n-add locale native_name settings="frontend/project.inlang/settings.json" picker="frontend/src/lib/components/locale-picker.svelte" messages_dir="frontend/messages" base_locale="en":
+i18n-add locale native_name settings="clients/webapp/svelte/project.inlang/settings.json" picker="clients/webapp/svelte/src/lib/components/locale-picker.svelte" messages_dir="clients/webapp/svelte/messages" base_locale="en":
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -636,7 +671,7 @@ i18n-add locale native_name settings="frontend/project.inlang/settings.json" pic
     mv "$picker_tmp" "$picker_path"
     rm -f "$block_tmp"
 
-    formatting_path="frontend/src/lib/utils/formatting.ts"
+    formatting_path="clients/webapp/svelte/src/lib/utils/formatting.ts"
     if [ ! -f "$formatting_path" ]; then
         echo "Warning: $formatting_path not found; add the date-fns loader for '{{ locale }}' manually."
     elif rg -q "date-fns/locale/{{ locale }}'" "$formatting_path"; then
@@ -690,7 +725,7 @@ i18n-add locale native_name settings="frontend/project.inlang/settings.json" pic
                 mv "$f_tmp" "$formatting_path"
                 echo "Added date-fns loader for '{{ locale }}' to $formatting_path"
 
-                if [ ! -e "frontend/node_modules/date-fns/locale/{{ locale }}.js" ] && [ ! -d "frontend/node_modules/date-fns/locale/{{ locale }}" ]; then
+                if [ ! -e "clients/webapp/svelte/node_modules/date-fns/locale/{{ locale }}.js" ] && [ ! -d "clients/webapp/svelte/node_modules/date-fns/locale/{{ locale }}" ]; then
                     echo "Warning: date-fns may not ship a '{{ locale }}' locale (check the module name, e.g. en uses en-US)."
                 fi
             fi
@@ -713,14 +748,14 @@ i18n-add locale native_name settings="frontend/project.inlang/settings.json" pic
 # Usage: just bench-edge-tunnel [count] [benchtime]
 [group('bench')]
 bench-edge-tunnel count="3" benchtime="2s":
-    cd backend && go test -run '^$' -bench '^BenchmarkEdgeTunnelProxyRequest$' -benchmem -count={{ count }} -benchtime={{ benchtime }} ./pkg/libarcane/edge
+    cd server/backend && go test -run '^$' -bench '^BenchmarkEdgeTunnelProxyRequest$' -benchmem -count={{ count }} -benchtime={{ benchtime }} ./pkg/libarcane/edge
 
 # Benchmark edge tunnel transport and write memory profile.
 
 # Usage: just bench-edge-tunnel-mem [profile] [benchtime]
 [group('bench')]
 bench-edge-tunnel-mem profile="edge_tunnel.mem.out" benchtime="5s":
-    cd backend && go test -run '^$' -bench '^BenchmarkEdgeTunnelProxyRequest$' -benchmem -benchtime={{ benchtime }} -memprofile={{ profile }} ./pkg/libarcane/edge
+    cd server/backend && go test -run '^$' -bench '^BenchmarkEdgeTunnelProxyRequest$' -benchmem -benchtime={{ benchtime }} -memprofile={{ profile }} ./pkg/libarcane/edge
 
 # -----------------------------------------------------------------------------
 # Deploy
@@ -759,7 +794,7 @@ _deploy-agent join_swarm agent_token="" manager_url="http://host.docker.internal
     fi
 
     echo "Building local agent image {{ local_image }}..."
-    docker buildx build --load -f docker/Dockerfile-agent -t "{{ local_image }}" .
+    docker buildx build --load -f pipes/deployment/docker/Dockerfile-agent -t "{{ local_image }}" .
 
     if docker inspect "{{ node_name }}" >/dev/null 2>&1; then
         echo "Reusing existing DinD engine {{ node_name }}..."
@@ -811,8 +846,8 @@ _deploy-agent join_swarm agent_token="" manager_url="http://host.docker.internal
         echo "Current swarm node ID: $current_node_id"
     fi
 
-    if [ -n "{{ agent_token }}" ] && command -v sqlite3 >/dev/null 2>&1 && [ -f backend/data/arcane.db ]; then
-        expected_node_id="$(sqlite3 backend/data/arcane.db "SELECT COALESCE(swarm_node_id, '') FROM environments WHERE access_token = '{{ agent_token }}' LIMIT 1;")"
+    if [ -n "{{ agent_token }}" ] && command -v sqlite3 >/dev/null 2>&1 && [ -f server/backend/data/arcane.db ]; then
+        expected_node_id="$(sqlite3 server/backend/data/arcane.db "SELECT COALESCE(swarm_node_id, '') FROM environments WHERE access_token = '{{ agent_token }}' LIMIT 1;")"
         if [ -n "$expected_node_id" ] && [ "$expected_node_id" != "$current_node_id" ]; then
             echo "agent token belongs to swarm node $expected_node_id, but {{ node_name }} is $current_node_id"
             if [ "{{ join_swarm }}" = "true" ]; then
@@ -1007,7 +1042,7 @@ release *args:
     fi
 
     # Check if the script is being run from the root of the project
-    if [ ! -f .arcane.json ] || [ ! -f frontend/package.json ] || [ ! -f CHANGELOG.md ]; then
+    if [ ! -f .arcane.json ] || [ ! -f clients/webapp/svelte/package.json ] || [ ! -f CHANGELOG.md ]; then
         echo "Error: This command must be run from the root of the project."
         exit 1
     fi
@@ -1116,9 +1151,9 @@ release *args:
                     '.version = $version | .revision = $revision | .buildTime = $build_time' .arcane.json > .arcane_tmp.json && mv .arcane_tmp.json .arcane.json
         git add .arcane.json
 
-        # Update version in frontend/package.json
-        jq --tab --arg new_version "$NEW_VERSION" '.version = $new_version' frontend/package.json > frontend/package_tmp.json && mv frontend/package_tmp.json frontend/package.json
-        git add frontend/package.json
+        # Update version in clients/webapp/svelte/package.json
+        jq --tab --arg new_version "$NEW_VERSION" '.version = $new_version' clients/webapp/svelte/package.json > clients/webapp/svelte/package_tmp.json && mv clients/webapp/svelte/package_tmp.json clients/webapp/svelte/package.json
+        git add clients/webapp/svelte/package.json
 
         # Generate changelog
         echo "Generating changelog..."
@@ -1165,7 +1200,7 @@ release *args:
         echo "Test mode: skipping confirmation prompt and all write operations."
         BUILD_TIME=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
         echo "Would update .arcane.json to version $NEW_VERSION, revision $LATEST_REVISION, and buildTime $BUILD_TIME"
-        echo "Would update frontend/package.json to version $NEW_VERSION"
+        echo "Would update clients/webapp/svelte/package.json to version $NEW_VERSION"
         echo "Generating changelog preview (no file write)..."
         CHANGELOG=$(git cliff $CLIFF_VERBOSE --github-token=$(gh auth token) --tag "v$NEW_VERSION" --unreleased)
 
@@ -1421,7 +1456,7 @@ _utils-hotfix:
     NC='\033[0m' # No Color
 
     # Check if the script is being run from the root of the project
-    if [ ! -f .arcane.json ] || [ ! -f frontend/package.json ] || [ ! -f CHANGELOG.md ]; then
+    if [ ! -f .arcane.json ] || [ ! -f clients/webapp/svelte/package.json ] || [ ! -f CHANGELOG.md ]; then
         echo -e "${RED}Error: This command must be run from the root of the project.${NC}"
         exit 1
     fi
@@ -1659,9 +1694,9 @@ _utils-hotfix:
             '.version = $version | .revision = $revision | .buildTime = $build_time' .arcane.json > .arcane_tmp.json && mv .arcane_tmp.json .arcane.json
     git add .arcane.json
 
-    # Update version in frontend/package.json
-    jq --arg new_version "$NEW_VERSION" '.version = $new_version' frontend/package.json > frontend/package_tmp.json && mv frontend/package_tmp.json frontend/package.json
-    git add frontend/package.json
+    # Update version in clients/webapp/svelte/package.json
+    jq --arg new_version "$NEW_VERSION" '.version = $new_version' clients/webapp/svelte/package.json > clients/webapp/svelte/package_tmp.json && mv clients/webapp/svelte/package_tmp.json clients/webapp/svelte/package.json
+    git add clients/webapp/svelte/package.json
 
     # Generate changelog for ONLY the fixes in this release branch
     echo -e "${BLUE}Generating changelog for hotfix...${NC}"
@@ -1737,14 +1772,14 @@ _utils-hotfix:
         jq --arg version "$NEW_VERSION" --arg revision "$LATEST_REVISION" --arg build_time "$BUILD_TIME" \
             '.version = $version | .revision = $revision | .buildTime = $build_time' .arcane.json > .arcane_tmp.json && mv .arcane_tmp.json .arcane.json
 
-    # Update version in frontend/package.json
-    jq --arg new_version "$NEW_VERSION" '.version = $new_version' frontend/package.json > frontend/package_tmp.json && mv frontend/package_tmp.json frontend/package.json
+    # Update version in clients/webapp/svelte/package.json
+    jq --arg new_version "$NEW_VERSION" '.version = $new_version' clients/webapp/svelte/package.json > clients/webapp/svelte/package_tmp.json && mv clients/webapp/svelte/package_tmp.json clients/webapp/svelte/package.json
 
     # Copy the updated CHANGELOG.md from the release branch
     git checkout "${RELEASE_BRANCH}" -- CHANGELOG.md
 
     # Commit the version updates to main
-    git add .arcane.json frontend/package.json CHANGELOG.md
+    git add .arcane.json clients/webapp/svelte/package.json CHANGELOG.md
     git commit -m "chore: bump version to ${NEW_VERSION} after hotfix release"
     git push origin main
 
@@ -1763,7 +1798,7 @@ utils target *args:
 # Clean build artifacts
 [group('maintenance')]
 _repo-clean:
-    rm -rf frontend/.svelte-kit frontend/build backend/.bin
+    rm -rf clients/webapp/svelte/.svelte-kit clients/webapp/svelte/build server/backend/.bin
     find . -type d -name node_modules -prune -exec rm -rf {} \;
 
 # Repo targets. Valid: "clean".

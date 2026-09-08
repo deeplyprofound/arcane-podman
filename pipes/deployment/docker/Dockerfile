@@ -8,21 +8,21 @@ ENV CI=true
 WORKDIR /app
 
 COPY --chown=vp:vp pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY --chown=vp:vp frontend/package.json ./frontend/package.json
+COPY --chown=vp:vp clients/webapp/svelte/package.json ./clients/webapp/svelte/package.json
 
 RUN --mount=type=cache,id=arcane-pnpm-v3,target=/home/vp/.local/share/pnpm/store,sharing=locked,uid=1000,gid=1000 \
     vp install --frozen-lockfile --prefer-offline
 
 RUN printf 'NODE_VERSION=%s\nSVELTEKIT_VERSION=%s\n' \
     "$(vp node --version)" \
-    "$(vp -C frontend node -p 'require("@sveltejs/kit/package.json").version')" \
+    "$(vp -C clients/webapp/svelte node -p 'require("@sveltejs/kit/package.json").version')" \
     > /tmp/arcane-frontend-build.env
 
-COPY --chown=vp:vp frontend ./frontend
+COPY --chown=vp:vp clients/webapp/svelte ./clients/webapp/svelte
 
 ENV BUILD_PATH=dist
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN vp -C frontend run build
+RUN vp -C clients/webapp/svelte run build
 
 # Stage 2: Build Backend
 FROM --platform=$BUILDPLATFORM golang:1.27-trixie AS backend-builder
@@ -38,16 +38,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY go.work ./
-COPY types ./types
-COPY cli ./cli
-COPY backend/go.mod backend/go.sum ./backend/
-WORKDIR /build/backend
+COPY server/types ./server/types
+COPY clients/cli ./clients/cli
+COPY server/database ./server/database
+COPY server/backend/go.mod server/backend/go.sum ./server/backend/
+WORKDIR /build/server/backend
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
-COPY backend ./
+COPY server/backend ./
 COPY .arcane.json ../arcane.json
 
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+COPY --from=frontend-builder /app/clients/webapp/svelte/dist ./frontend/dist
 COPY --from=frontend-builder /tmp/arcane-frontend-build.env /tmp/arcane-frontend-build.env
 RUN --mount=type=cache,target=/root/.cache/go-build \
     . /tmp/arcane-frontend-build.env && \

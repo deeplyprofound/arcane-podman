@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Copy dependency manifests first to preserve the install layer cache
 COPY --chown=vp:vp pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY --chown=vp:vp frontend/package.json ./frontend/package.json
+COPY --chown=vp:vp clients/webapp/svelte/package.json ./clients/webapp/svelte/package.json
 
 # Install dependencies with a persistent package store cache
 RUN mkdir -p /home/vp/.local/share/pnpm/store
@@ -17,14 +17,14 @@ RUN --mount=type=cache,id=arcane-pnpm-v3,target=/home/vp/.local/share/pnpm/store
     vp install --frozen-lockfile --prefer-offline
 
 # Copy frontend source
-COPY --chown=vp:vp frontend ./frontend
+COPY --chown=vp:vp clients/webapp/svelte ./clients/webapp/svelte
 
 ENV NODE_ENV=development \
     PORT=3000
 
 EXPOSE 3000
 
-CMD ["vp", "-C", "frontend", "run", "dev"]
+CMD ["vp", "-C", "clients/webapp/svelte", "run", "dev"]
 
 # Stage 2: Backend Development with optimized caching
 FROM --platform=$BUILDPLATFORM golang:1.27-trixie AS backend-dev
@@ -49,22 +49,23 @@ WORKDIR /app
 
 # Copy Go workspace file and all modules first
 COPY go.work ./go.work
-COPY types/ ./types/
-COPY cli/ ./cli/
+COPY server/types/ ./server/types/
+COPY clients/cli/ ./clients/cli/
+COPY server/database/ ./server/database/
 
 # Copy backend Go module files for dependency caching
-COPY backend/go.mod backend/go.sum ./backend/
+COPY server/backend/go.mod server/backend/go.sum ./server/backend/
 
 # Download dependencies with cache mounts
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    cd backend && go mod download && go mod verify
+    cd server/backend && go mod download && go mod verify
 
 # Create directories with proper permissions
 RUN mkdir -p /app/data /app/.bin /builds && \
     chmod 755 /app/data /app/.bin
 
-WORKDIR /app/backend
+WORKDIR /app/server/backend
 
 EXPOSE 3552
 

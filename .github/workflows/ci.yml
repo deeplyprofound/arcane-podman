@@ -24,18 +24,18 @@ jobs:
       fail-fast: false
       matrix:
         module:
-          - name: backend
-            path: backend
+          - name: server/backend
+            path: server/backend
             timeout: 30
             gcc: true
             cgo_enabled: "1"
-          - name: cli
-            path: cli
+          - name: clients/cli
+            path: clients/cli
             timeout: 10
             gcc: false
             cgo_enabled: "1"
-          - name: types
-            path: types
+          - name: server/types
+            path: server/types
             timeout: 10
             gcc: false
             cgo_enabled: "1"
@@ -91,12 +91,12 @@ jobs:
       fail-fast: false
       matrix:
         module:
-          - name: backend
-            args: --build-tags=exclude_frontend --config=../.github/.golangci.yml
-          - name: cli
-            args: --config=../.github/.golangci.yml
-          - name: types
-            args: --config=../.github/.golangci.yml
+          - name: server/backend
+            args: --build-tags=exclude_frontend --config=../../.github/.golangci.yml
+          - name: clients/cli
+            args: --config=../../.github/.golangci.yml
+          - name: server/types
+            args: --config=../../.github/.golangci.yml
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -126,8 +126,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: backend/go.mod
-          cache-dependency-path: backend/go.sum
+          go-version-file: server/backend/go.mod
+          cache-dependency-path: server/backend/go.sum
 
       - name: Install deadcode
         run: go install golang.org/x/tools/cmd/deadcode@latest
@@ -137,7 +137,7 @@ jobs:
 
       - name: Run deadcode analysis
         id: deadcode
-        working-directory: backend
+        working-directory: server/backend
         continue-on-error: true
         run: |
           OUTPUT=$(deadcode ./... 2>&1 || true)
@@ -280,7 +280,7 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml', 'tests/package.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml', 'pipes/gates/package.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 
@@ -296,7 +296,7 @@ jobs:
         run: just deps install tests
 
       - name: Run Playwright E2E tests
-        run: vp -C tests exec playwright test ${{ matrix.database.playwright_projects }}
+        run: vp -C pipes/gates exec playwright test ${{ matrix.database.playwright_projects }}
         env:
           COMPOSE_FILE: ${{ matrix.database.compose_file }}
           BASE_URL: http://localhost:${{ matrix.database.port }}
@@ -306,7 +306,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report-${{ matrix.database.name }}
-          path: tests/.report
+          path: pipes/gates/.report
           include-hidden-files: true
           retention-days: 15
 
@@ -332,8 +332,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: cli/go.mod
-          cache-dependency-path: cli/go.sum
+          go-version-file: clients/cli/go.mod
+          cache-dependency-path: clients/cli/go.sum
 
       - name: Set up Depot CLI
         uses: depot/setup-action@v1
@@ -341,10 +341,10 @@ jobs:
           configure-docker: true
 
       - name: Install Playwright test dependencies
-        run: vp -C tests install
+        run: vp -C pipes/gates install
 
       - name: Run CLI E2E tests against socket proxy
-        run: vp -C tests exec playwright test --project=cli
+        run: vp -C pipes/gates exec playwright test --project=cli
         env:
           COMPOSE_FILE: setup/compose-proxy.yaml
           BASE_URL: http://localhost:3002
@@ -355,6 +355,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report-proxy-cli
-          path: tests/.report
+          path: pipes/gates/.report
           include-hidden-files: true
           retention-days: 15

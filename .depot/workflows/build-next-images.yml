@@ -44,8 +44,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: backend/go.mod
-          cache-dependency-path: backend/go.sum
+          go-version-file: server/backend/go.mod
+          cache-dependency-path: server/backend/go.sum
 
       - name: Install envsubst
         run: sudo apt-get update && sudo apt-get install -y gettext-base
@@ -80,7 +80,7 @@ jobs:
         id: frontend-versions
         run: |
           echo "node_version=$(node --version)" >> "$GITHUB_OUTPUT"
-          echo "sveltekit_version=$(vp -C frontend node -p 'require("@sveltejs/kit/package.json").version')" >> "$GITHUB_OUTPUT"
+          echo "sveltekit_version=$(vp -C clients/webapp/svelte node -p 'require("@sveltejs/kit/package.json").version')" >> "$GITHUB_OUTPUT"
 
       - name: Request App Token
         id: app-token

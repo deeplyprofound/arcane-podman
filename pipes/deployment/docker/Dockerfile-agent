@@ -16,14 +16,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends git ca-certific
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY go.work ./
-COPY types ./types
-COPY cli ./cli
-COPY backend/go.mod backend/go.sum ./backend/
-WORKDIR /build/backend
+COPY server/types ./server/types
+COPY clients/cli ./clients/cli
+COPY server/database ./server/database
+COPY server/backend/go.mod server/backend/go.sum ./server/backend/
+WORKDIR /build/server/backend
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
-COPY backend ./
+COPY server/backend ./
 COPY .arcane.json ../arcane.json
 
 RUN --mount=type=cache,target=/root/.cache/go-build \

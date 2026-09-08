@@ -93,7 +93,7 @@ jobs:
         uses: depot/build-push-action@v1.18.0
         with:
           context: .
-          file: docker/Dockerfile
+          file: pipes/deployment/docker/Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/riscv64
           push: true
           tags: ${{ steps.manager-meta.outputs.tags }}
@@ -108,7 +108,7 @@ jobs:
         uses: depot/build-push-action@v1.18.0
         with:
           context: .
-          file: docker/Dockerfile-agent
+          file: pipes/deployment/docker/Dockerfile-agent
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/riscv64
           push: true
           tags: ${{ steps.agent-meta.outputs.tags }}

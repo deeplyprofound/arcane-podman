@@ -18,7 +18,7 @@ before:
 builds:
   - id: arcane
     main: ./cmd/main.go
-    dir: backend
+    dir: server/backend
     binary: arcane
     env:
       - CGO_ENABLED=0
@@ -56,7 +56,7 @@ builds:
 
   - id: arcane-agent
     main: ./cmd/main.go
-    dir: backend
+    dir: server/backend
     binary: arcane-agent
     tags:
       - exclude_frontend
@@ -94,7 +94,7 @@ builds:
 
   - id: arcane-cli
     main: .
-    dir: cli
+    dir: clients/cli
     binary: arcane-cli
     env:
       - CGO_ENABLED=0
@@ -211,7 +211,7 @@ nfpms:
       - archlinux
     bindir: /usr/bin
     contents:
-      - src: ./cli/README.md
+      - src: ./clients/cli/README.md
         dst: '/usr/share/doc/{{ if eq (index .Env "BUILD_NEXT") "true" }}arcane-cli-next{{ else }}arcane-cli{{ end }}/README.md'
       - src: ./LICENSE
         dst: '/usr/share/doc/{{ if eq (index .Env "BUILD_NEXT") "true" }}arcane-cli-next{{ else }}arcane-cli{{ end }}/LICENSE'
@@ -275,7 +275,7 @@ dockers_v2:
   - id: arcane-image
     ids:
       - arcane
-    dockerfile: docker/Dockerfile-static
+    dockerfile: pipes/deployment/docker/Dockerfile-static
     images:
       - 'ghcr.io/getarcaneapp/arcane'
       - 'ghcr.io/getarcaneapp/manager'
@@ -308,7 +308,7 @@ dockers_v2:
   - id: arcane-agent-image
     ids:
       - arcane-agent
-    dockerfile: docker/Dockerfile-agent-static
+    dockerfile: pipes/deployment/docker/Dockerfile-agent-static
     images:
       - 'ghcr.io/getarcaneapp/arcane-headless'
       - 'ghcr.io/getarcaneapp/agent'

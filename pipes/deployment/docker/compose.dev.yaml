@@ -8,12 +8,12 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ${HOST_PROJECT_ROOT:-..}/frontend:/app/frontend:cached
-      - ${HOST_PROJECT_ROOT:-..}/package.json:/app/package.json:ro
-      - ${HOST_PROJECT_ROOT:-..}/pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
-      - ${HOST_PROJECT_ROOT:-..}/pnpm-lock.yaml:/app/pnpm-lock.yaml:ro
+      - ${HOST_PROJECT_ROOT:-../../..}/clients/webapp/svelte:/app/clients/webapp/svelte:cached
+      - ${HOST_PROJECT_ROOT:-../../..}/package.json:/app/package.json:ro
+      - ${HOST_PROJECT_ROOT:-../../..}/pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
+      - ${HOST_PROJECT_ROOT:-../../..}/pnpm-lock.yaml:/app/pnpm-lock.yaml:ro
       - /app/node_modules
-      - /app/frontend/node_modules
+      - /app/clients/webapp/svelte/node_modules
       - pnpm-cache:/home/vp/.local/share/pnpm/store
     environment:
       - NODE_ENV=development
@@ -40,11 +40,12 @@ services:
     ports:
       - "3552:3552"
     volumes:
-      - ${HOST_PROJECT_ROOT:-..}/go.work:/app/go.work:ro
-      - ${HOST_PROJECT_ROOT:-..}/types:/app/types:cached
-      - ${HOST_PROJECT_ROOT:-..}/cli:/app/cli:cached
-      - ${HOST_PROJECT_ROOT:-..}/backend:/app/backend:cached
-      - ${HOST_PROJECT_ROOT:-..}/backend/.air.toml:/app/backend/.air.toml:ro
+      - ${HOST_PROJECT_ROOT:-../../..}/go.work:/app/go.work:ro
+      - ${HOST_PROJECT_ROOT:-../../..}/server/types:/app/server/types:cached
+      - ${HOST_PROJECT_ROOT:-../../..}/clients/cli:/app/clients/cli:cached
+      - ${HOST_PROJECT_ROOT:-../../..}/server/database:/app/server/database:cached
+      - ${HOST_PROJECT_ROOT:-../../..}/server/backend:/app/server/backend:cached
+      - ${HOST_PROJECT_ROOT:-../../..}/server/backend/.air.toml:/app/server/backend/.air.toml:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - arcane-dev-data:/app/data
       - arcane-builds:/builds
@@ -62,7 +63,7 @@ services:
       - ENCRYPTION_KEY=dev-encryption-key-replace-in-production-must-be-32-chars
       - JWT_SECRET=dev-jwt-secret-replace-in-production-must-be-long-enough
       - DATABASE_URL=file:/app/data/arcane.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(2500)&_txlock=immediate
-    working_dir: /app/backend
+    working_dir: /app/server/backend
     networks:
       - arcane-dev
     restart: unless-stopped
@@ -102,14 +103,15 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - agent-dev-data:/app/data
       - arcane-builds:/builds
-      - ${HOST_PROJECT_ROOT:-..}/go.work:/app/go.work:ro
-      - ${HOST_PROJECT_ROOT:-..}/types:/app/types:cached
-      - ${HOST_PROJECT_ROOT:-..}/cli:/app/cli:cached
-      - ${HOST_PROJECT_ROOT:-..}/backend:/app/backend:cached
-      - ${HOST_PROJECT_ROOT:-..}/backend/.air.toml:/app/backend/.air.toml:ro
+      - ${HOST_PROJECT_ROOT:-../../..}/go.work:/app/go.work:ro
+      - ${HOST_PROJECT_ROOT:-../../..}/server/types:/app/server/types:cached
+      - ${HOST_PROJECT_ROOT:-../../..}/clients/cli:/app/clients/cli:cached
+      - ${HOST_PROJECT_ROOT:-../../..}/server/database:/app/server/database:cached
+      - ${HOST_PROJECT_ROOT:-../../..}/server/backend:/app/server/backend:cached
+      - ${HOST_PROJECT_ROOT:-../../..}/server/backend/.air.toml:/app/server/backend/.air.toml:ro
       - go-build-cache:/go/cache
       - go-mod-cache:/go/pkg/mod
-    working_dir: /app/backend
+    working_dir: /app/server/backend
     networks:
       - arcane-dev
     restart: unless-stopped
