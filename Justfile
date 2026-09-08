@@ -320,22 +320,22 @@ _lint-js:
 # Build golangci-lint with the custom linters enabled by the shared config
 [group('quality')]
 _build-golangci-lint:
-    golangci-lint custom
+    cd .config && golangci-lint custom
 
 # Lint Go backend
 [group('quality')]
 _lint-backend: _build-golangci-lint
-    cd server/backend && ../../.bin/golangci-lint-custom run -c ../../.github/.golangci.yml ./...
+    cd server/backend && ../../.bin/golangci-lint-custom run -c ../../.config/.golangci.yml ./...
 
 # Lint Go CLI
 [group('quality')]
 _lint-cli: _build-golangci-lint
-    cd clients/cli && ../../.bin/golangci-lint-custom run -c ../../.github/.golangci.yml ./...
+    cd clients/cli && ../../.bin/golangci-lint-custom run -c ../../.config/.golangci.yml ./...
 
 # Lint Types
 [group('quality')]
 _lint-types: _build-golangci-lint
-    cd server/types && ../../.bin/golangci-lint-custom run -c ../../.github/.golangci.yml ./...
+    cd server/types && ../../.bin/golangci-lint-custom run -c ../../.config/.golangci.yml ./...
 
 # Lint edge tunnel protobuf definitions.
 [group('quality')]
@@ -392,7 +392,7 @@ fix target="all":
 # Run Snyk against all projects including dev dependencies
 [group('security')]
 _snyk-scan:
-    snyk test --all-projects --dev --policy-path=.snyk
+    snyk test --all-projects --dev --policy-path=.config/.snyk
 
 # Snyk targets. Valid: "scan".
 [group('security')]

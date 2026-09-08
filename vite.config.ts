@@ -9,7 +9,7 @@ export default defineConfig({
 		sortPackageJson: true,
 		ignorePatterns: [
 			'.arcane.json',
-			'.custom-gcl.yml',
+			'.config/**',
 			'.depot/**',
 			'.devcontainer/**',
 			'.github/**',

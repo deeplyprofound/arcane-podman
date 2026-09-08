@@ -118,4 +118,4 @@ patch: {}
 exclude:
   code:
     - '**/*_test.go'
-    - tests/**
+    - pipes/gates/**

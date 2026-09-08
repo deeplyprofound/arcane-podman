@@ -92,11 +92,11 @@ jobs:
       matrix:
         module:
           - name: server/backend
-            args: --build-tags=exclude_frontend --config=../../.github/.golangci.yml
+            args: --build-tags=exclude_frontend --config=../../.config/.golangci.yml
           - name: clients/cli
-            args: --config=../../.github/.golangci.yml
+            args: --config=../../.config/.golangci.yml
           - name: server/types
-            args: --config=../../.github/.golangci.yml
+            args: --config=../../.config/.golangci.yml
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
