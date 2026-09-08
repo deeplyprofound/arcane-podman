@@ -7,6 +7,7 @@ replace (
 	// drop this pin once copa supports buildx >= 0.35 and the dependency is bumped.
 	github.com/docker/buildx => github.com/docker/buildx v0.32.1
 	github.com/getarcaneapp/arcane/cli/v2 => ../../clients/cli
+	github.com/getarcaneapp/arcane/database/v2 => ../database
 	github.com/getarcaneapp/arcane/types/v2 => ../types
 )
 
@@ -32,6 +33,7 @@ require (
 	github.com/docker/go-units v0.5.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/getarcaneapp/arcane/cli/v2 v2.10.1
+	github.com/getarcaneapp/arcane/database/v2 v2.0.0
 	github.com/getarcaneapp/arcane/types/v2 v2.10.1
 	github.com/go-git/go-git/v5 v5.19.2
 	github.com/go-webauthn/webauthn v0.18.0

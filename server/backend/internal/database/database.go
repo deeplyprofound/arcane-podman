@@ -26,7 +26,7 @@ import (
 	"gorm.io/gorm/logger"
 
 	"github.com/getarcaneapp/arcane/backend/v2/pkg/utils"
-	"github.com/getarcaneapp/arcane/backend/v2/resources"
+	dbmigrations "github.com/getarcaneapp/arcane/database/v2"
 )
 
 type DB struct {
@@ -262,7 +262,7 @@ func newGooseProviderInternal(db *sql.DB, dbProvider string) (*goose.Provider, e
 }
 
 func embeddedMigrationFSInternal(dbProvider string) (fs.FS, error) {
-	migrationsFS, err := fs.Sub(resources.FS, "migrations/"+dbProvider)
+	migrationsFS, err := fs.Sub(dbmigrations.FS, "migrations/"+dbProvider)
 	if err != nil {
 		return nil, errors.WrapIff(err, "failed to load embedded migrations for %s", dbProvider)
 	}
@@ -533,7 +533,7 @@ func getHighestEmbeddedMigrationVersionInternal(dbProvider string) (int64, error
 }
 
 func getEmbeddedMigrationVersionsInternal(dbProvider string) ([]int64, error) {
-	entries, err := resources.FS.ReadDir("migrations/" + dbProvider)
+	entries, err := dbmigrations.FS.ReadDir("migrations/" + dbProvider)
 	if err != nil {
 		return nil, errors.WrapIff(err, "failed to read embedded migrations for %s", dbProvider)
 	}

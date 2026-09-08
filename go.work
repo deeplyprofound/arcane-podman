@@ -3,5 +3,6 @@ go 1.27
 use (
 	./server/backend
 	./server/types
+	./server/database
 	./clients/cli
 )
