@@ -1,0 +1,20 @@
+diff --git a/.devcontainer/devcontainer.json b/.devcontainer/devcontainer.json
+index a927ae13..33cf0862 100644
+--- a/.devcontainer/devcontainer.json
++++ b/.devcontainer/devcontainer.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "Arcane Dev Container",
++  "name": "Arcane-Podman Dev Container",
+   "dockerComposeFile": "compose.yaml",
+   "service": "arcane-dev-container",
+   "workspaceFolder": "/workspace",
+@@ -48,7 +48,7 @@
+   "postCreateCommand": "just deps install all",
+   "remoteUser": "root",
+   "containerEnv": {
+-    "TZ": "Pacific/Auckland"
++    "TZ": "America/New_York"
+   },
+   "remoteEnv": {
+     "HOST_PROJECT_ROOT": "${localWorkspaceFolder}"
