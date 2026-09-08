@@ -533,6 +533,13 @@ _generate-proto:
 generate target:
     @just "_generate-{{ target }}"
 
+# Generate frontend API types from the backend's huma OpenAPI 3.1 spec.
+[group('codegen')]
+typegen:
+    go -C server/backend run -tags exclude_frontend ./cmd openapi -f json -o "{{ justfile_directory() }}/clients/webapp/svelte/openapi.json"
+    vp -C clients/webapp/svelte exec openapi-typescript openapi.json -o src/lib/types/api.ts
+    rm -f "{{ justfile_directory() }}/clients/webapp/svelte/openapi.json"
+
 # Generate the docs config schema JSON.
 [group('docs')]
 _docs-config output="" source_root=".":

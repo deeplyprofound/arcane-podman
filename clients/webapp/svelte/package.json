@@ -66,6 +66,7 @@
 	},
 	"devDependencies": {
 		"@iconify/json": "^2.2.525",
+		"openapi-typescript": "^7.13.0",
 		"@inlang/paraglide-js": "2.25.0",
 		"@sveltejs/adapter-static": "^4.0.0-next.4",
 		"@sveltejs/vite-plugin-svelte": "^7.3.0",
