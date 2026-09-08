@@ -53,7 +53,7 @@ export default defineConfig({
 	},
 	staged: {
 		'clients/webapp/svelte/**/*': "sh -c 'just format frontend --check'",
-		'{pipes/gates,email-templates}/**/*.{ts,tsx,js,jsx,mts,cts}': "sh -c 'just format js --check'",
+		'{pipes/gates,server/emails}/**/*.{ts,tsx,js,jsx,mts,cts}': "sh -c 'just format js --check'",
 		'{server/backend,server/types,server/database,clients/cli}/**/*': "sh -c 'just format go --check'"
 	},
 	test: {

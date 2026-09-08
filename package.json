@@ -4,7 +4,7 @@
 	"workspaces": [
 		"clients/webapp/svelte",
 		"pipes/gates",
-		"email-templates"
+		"server/emails"
 	],
 	"scripts": {
 		"preinstall": "npx only-allow pnpm"

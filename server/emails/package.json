@@ -1,5 +1,5 @@
 {
-	"name": "arcane-email-templates",
+	"name": "arcane-emails",
 	"version": "1.0.0",
 	"scripts": {
 		"preinstall": "npx only-allow pnpm",

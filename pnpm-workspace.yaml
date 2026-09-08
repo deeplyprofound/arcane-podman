@@ -1,7 +1,7 @@
 packages:
   - clients/webapp/svelte
   - pipes/gates
-  - email-templates
+  - server/emails
 
 packageExtensions:
   svelte-codemirror-editor@2.1.0:

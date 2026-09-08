@@ -241,7 +241,7 @@ _format-frontend:
 [group('quality')]
 _format-js:
     vp fmt tests
-    vp fmt email-templates
+    vp fmt server/emails
 
 [group('quality')]
 _format-go:
@@ -260,7 +260,7 @@ _format-check-frontend:
 [group('quality')]
 _format-check-js:
     vp fmt --check tests
-    vp fmt --check email-templates
+    vp fmt --check server/emails
 
 [group('quality')]
 _format-check-go:
@@ -307,15 +307,15 @@ _lint-tests:
 
 # Type check email templates
 [group('quality')]
-_lint-email-templates:
-    vp -C email-templates run check
+_lint-emails:
+    vp -C server/emails run check
 
 # Type check all JavaScript/TypeScript workspaces
 [group('quality')]
 _lint-js:
     @just _lint-frontend
     @just _lint-tests
-    @just _lint-email-templates
+    @just _lint-emails
 
 # Build golangci-lint with the custom linters enabled by the shared config
 [group('quality')]
@@ -352,7 +352,7 @@ _lint-all:
     @just _lint-go
     @just _lint-proto
 
-# Lint targets. Valid: "backend", "frontend", "tests", "email-templates", "js", "cli", "types", "go", "proto", "all".
+# Lint targets. Valid: "backend", "frontend", "tests", "emails", "js", "cli", "types", "go", "proto", "all".
 [group('quality')]
 lint target="all":
     @just "_lint-{{ target }}"
