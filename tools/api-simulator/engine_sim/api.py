@@ -88,8 +88,10 @@ def build_app(profile_name: str, db_url: str = "sqlite+pysqlite:///:memory:") ->
         return JSONResponse(store.list_images())
 
     @app.post("/images/create")
-    def images_create():
-        return PlainTextResponse(json.dumps({"status": "Download complete"}) + "\n", media_type="application/json")
+    def images_create(fromImage: str = "", tag: str = "latest"):  # noqa: N803 - Docker's query params
+        ref = store.pull_image(fromImage, tag) if fromImage else ""
+        body = json.dumps({"status": "Pulling from " + ref}) + "\n" + json.dumps({"status": "Download complete"}) + "\n"
+        return PlainTextResponse(body, media_type="application/json")
 
     # ---- volumes ----
     @app.get("/volumes")

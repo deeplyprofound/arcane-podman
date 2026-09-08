@@ -23,6 +23,20 @@ def _hexid() -> str:
     return secrets.token_hex(32)
 
 
+def _normalize_image_ref(name: str) -> str:
+    """Docker/Podman-compat unqualified-name resolution: a single-segment name
+    -> docker.io/library/<name>; a registry-less multi-segment -> docker.io/…;
+    anything with a registry host (dot/colon/localhost in the first segment) is
+    left as-is (respects the user's registries.conf intent)."""
+    parts = name.split("/")
+    if len(parts) == 1:
+        return "docker.io/library/" + name
+    first = parts[0]
+    if "." in first or ":" in first or first == "localhost":
+        return name
+    return "docker.io/" + name
+
+
 def _now() -> tuple[str, int, int]:
     dt = datetime.now(timezone.utc)
     iso = dt.strftime("%Y-%m-%dT%H:%M:%S.%f000Z")
@@ -80,6 +94,23 @@ class Store:
         return self.profile.swarm_status
 
     # ------------------------------------------------------------ images
+    def pull_image(self, from_image: str, tag: str) -> str:
+        """Model the compat /images/create pull, including Docker-style
+        unqualified-name defaulting to docker.io/library (verified: Podman's
+        compat API does this too, so clients need NOT pre-qualify short names).
+        """
+        repo = _normalize_image_ref(from_image)
+        ref = f"{repo}:{tag or 'latest'}"
+        with session_scope(self.maker) as s:
+            existing = s.scalars(select(models.Image)).all()
+            for i in existing:
+                if ref in (i.repo_tags or []):
+                    return ref
+            iso, _, _ = _now()
+            s.add(models.Image(id="sha256:" + _hexid(), repo_tags=[ref], repo_digests=[], size=8000000, created=iso))
+            self._emit(s, "image", "pull", ref, {})
+        return ref
+
     def list_images(self) -> list[dict[str, Any]]:
         with session_scope(self.maker) as s:
             return [self._image_json(i) for i in s.scalars(select(models.Image))]

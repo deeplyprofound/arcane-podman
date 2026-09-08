@@ -47,7 +47,7 @@ network, messaging) off it. Nearly every finding below hangs off this.
 | B4 | Swarm reachable | **gated ✓** | InitSwarm/JoinSwarm/LeaveSwarm/UnlockSwarm short-circuit with `ErrSwarmUnsupportedOnPodman` (4xx) on Podman. Frontend nav-hide of `/swarm/cluster` is a follow-up (needs generated type). |
 | B5 | BuildKit builds | **gated ✓** | `BuildService.BuildImage` returns `ErrBuildUnsupportedOnPodman` (4xx) instead of dialing BuildKit /grpc+/session. |
 | B6 | Copacetic patch | **gated ✓** | `ImagePatchService.PatchImage` returns `ErrPatchUnsupportedOnPodman` (4xx) instead of a BuildKit `docker://` dial. |
-| B7 | Short-name pulls | **blocker** | no implicit `docker.io`; headless enforcing fails; ships bare `alpine:latest` |
+| B7 | Short-name pulls | **fixed/moot ✓** | Our bare `alpine:latest` default is now `docker.io/library/alpine:latest`. B7b (normalize USER short names) is NOT done on purpose: the compat `/images/create` already defaults unqualified names to docker.io (verified live) AND preserves explicit registries — normalizing would override the user's registries.conf. Gated. |
 | D1 | Daemonless UX | degraded | socket off by default; connect errors say "Docker" |
 | ~~D2~~ | Default network | **moot (gated)** | Compat API aliases the default net to `bridge` (NOT `podman`) — `IsDefaultNetwork` already matches. Book-based finding; disproved by the sim/live gate. |
 | ~~D3~~ | Restore net DNS | **moot (gated)** | Same: the default comes back as `bridge`, which `rusticRestoreNetworkModeInternal` already excludes. |
