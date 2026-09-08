@@ -52,7 +52,7 @@ network, messaging) off it. Nearly every finding below hangs off this.
 | ~~D2~~ | Default network | **moot (gated)** | Compat API aliases the default net to `bridge` (NOT `podman`) — `IsDefaultNetwork` already matches. Book-based finding; disproved by the sim/live gate. |
 | ~~D3~~ | Restore net DNS | **moot (gated)** | Same: the default comes back as `bridge`, which `rusticRestoreNetworkModeInternal` already excludes. |
 | D4 | Rootless ports | degraded | `<1024` publish fails; no inbound w/o forward — raw error |
-| D5 | Restart policy | degraded | `unless-stopped`≡`always`; no reboot-persist w/o `podman-restart.service` |
+| ~~D5~~ | Restart policy | **mostly moot** | Compat API PRESERVES the policy name (`unless-stopped`→`unless-stopped`, verified live) — the book's `≡always` is a runtime/systemd mapping, not the API. Arcane's display is correct. Only the reboot-persistence caveat (`podman-restart.service`) is informational, not a code fix. |
 | D6 | Healthchecks | degraded | systemd-timer driven; rootless needs lingering; `StartInterval` ignored |
 | D7 | info/system df | degraded | empty GitCommit/BuildTime/BuildCache; no Swarm/Plugins sections |
 | D8 | Compose discovery | degraded | only matches `com.docker.compose.*`, misses `io.podman.compose.*` |
