@@ -187,6 +187,16 @@ func (s *DockerClientService) GetClient(ctx context.Context) (*client.Client, er
 	return cli, nil
 }
 
+// IsPodman reports whether the connected engine is Podman (best-effort, cached).
+// Feature gates (Swarm, BuildKit builds, image patch) key off this.
+func (s *DockerClientService) IsPodman(ctx context.Context) bool {
+	if s == nil {
+		return false
+	}
+	info, err := s.EngineInfo(ctx)
+	return err == nil && info.IsPodman()
+}
+
 // EngineInfo returns the detected container engine (docker vs podman) and its
 // cgroup version, computed once per connection and cached. Feature gating and
 // engine-specific behavior across the backend should key off this rather than

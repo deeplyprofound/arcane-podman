@@ -1334,7 +1334,14 @@ func (s *SwarmService) GetSwarmInfo(ctx context.Context) (*swarmtypes.SwarmInfo,
 	return new(swarmtypes.NewSwarmInfo(infoResult.Swarm)), nil
 }
 
+// errSwarmUnsupportedOnPodman gates the Swarm lifecycle on Podman (no Swarm;
+// compat API omits the endpoints) — a clear 4xx instead of a raw daemon 404.
+var errSwarmUnsupportedOnPodman = common.ErrSwarmUnsupportedOnPodman
+
 func (s *SwarmService) InitSwarm(ctx context.Context, req swarmtypes.SwarmInitRequest) (*swarmtypes.SwarmInitResponse, error) {
+	if s.dockerService.IsPodman(ctx) {
+		return nil, errSwarmUnsupportedOnPodman
+	}
 	dockerClient, err := s.dockerService.GetClient(ctx)
 	if err != nil {
 		return nil, errors.WrapIf(err, "failed to connect to Docker")
@@ -1376,6 +1383,9 @@ func (s *SwarmService) InitSwarm(ctx context.Context, req swarmtypes.SwarmInitRe
 }
 
 func (s *SwarmService) JoinSwarm(ctx context.Context, req swarmtypes.SwarmJoinRequest) error {
+	if s.dockerService.IsPodman(ctx) {
+		return errSwarmUnsupportedOnPodman
+	}
 	dockerClient, err := s.dockerService.GetClient(ctx)
 	if err != nil {
 		return errors.WrapIf(err, "failed to connect to Docker")
@@ -1398,6 +1408,9 @@ func (s *SwarmService) JoinSwarm(ctx context.Context, req swarmtypes.SwarmJoinRe
 }
 
 func (s *SwarmService) LeaveSwarm(ctx context.Context, req swarmtypes.SwarmLeaveRequest) error {
+	if s.dockerService.IsPodman(ctx) {
+		return errSwarmUnsupportedOnPodman
+	}
 	if err := s.ensureSwarmActiveInternal(ctx); err != nil {
 		return err
 	}
@@ -1417,6 +1430,9 @@ func (s *SwarmService) LeaveSwarm(ctx context.Context, req swarmtypes.SwarmLeave
 }
 
 func (s *SwarmService) UnlockSwarm(ctx context.Context, req swarmtypes.SwarmUnlockRequest) error {
+	if s.dockerService.IsPodman(ctx) {
+		return errSwarmUnsupportedOnPodman
+	}
 	if err := s.ensureSwarmActiveInternal(ctx); err != nil {
 		return err
 	}

@@ -98,6 +98,12 @@ func (s *BuildService) BuildImage(ctx context.Context, environmentID string, req
 	if s.builder == nil {
 		return nil, errors.New("build service not available")
 	}
+	// Builds go through Docker's embedded BuildKit (/grpc + /session), which
+	// Podman (buildah) does not serve. Gate with a clear message instead of a
+	// raw dial failure.
+	if s.dockerService.IsPodman(ctx) {
+		return nil, common.ErrBuildUnsupportedOnPodman
+	}
 
 	// The builder emits raw docker-CLI text. The log capture stores it verbatim
 	// for build history; the progress writer gets it framed as {"log":...} lines.

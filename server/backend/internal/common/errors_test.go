@@ -28,3 +28,9 @@ func TestClassifyPreservesChainDetailsAndSingleStack(t *testing.T) {
 	}
 	require.Equal(t, 1, stackCount)
 }
+
+func TestPodmanUnsupportedSentinelsAreBadRequest(t *testing.T) {
+	for _, e := range []error{ErrSwarmUnsupportedOnPodman, ErrBuildUnsupportedOnPodman, ErrPatchUnsupportedOnPodman} {
+		require.ErrorIs(t, e, ErrBadRequest, "Podman-unsupported gates should classify as 4xx: %v", e)
+	}
+}

@@ -86,6 +86,11 @@ func NewImagePatchService(db *database.DB, dockerService *docker.DockerClientSer
 // PatchImage starts a background patch run for the given image and returns the
 // pending record (carrying the activity ID) immediately.
 func (s *ImagePatchService) PatchImage(ctx context.Context, envID, imageID string, opts imagepatch.PatchOptions, user common.User) (*imagepatch.PatchRecord, error) {
+	// Copacetic patches via BuildKit (BkAddr "docker://"), which Podman does not
+	// serve. Gate with a clear message instead of a BuildKit dial failure.
+	if s.dockerService.IsPodman(ctx) {
+		return nil, common.ErrPatchUnsupportedOnPodman
+	}
 	runCtx := utils.ActivityRuntimeContext(ctx, nil)
 
 	dockerClient, err := s.dockerService.GetClient(ctx)

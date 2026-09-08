@@ -44,9 +44,9 @@ network, messaging) off it. Nearly every finding below hangs off this.
 | B1 | Rootless identity | **blocker** | socket-GID group + forced UID 65532 re-exec break rootless socket access |
 | B2 | cgroup-v2 sanitize | **blocker** | `PrepareRecreateHostConfigForEngine` not wired into recreate/create/edit |
 | B3 | SELinux relabel | **fixed ✓** | `volumehelper.HostConfig` is engine-aware: on Podman+SELinux it relabels host-path bind strings (`:z`) and converts host-path `mount.Mount`→`:z` Binds string (the Mounts API has no relabel field). All 7 helper/backup/rustic/rename call sites wired. Verified on the enforcing Fedora CoreOS VM (below). |
-| B4 | Swarm reachable | **blocker** | `/swarm/cluster` + `SwarmInit/Join/Leave/Unlock` ungated → raw errors |
-| B5 | BuildKit builds | **blocker** | build path dials `/grpc`+`/session`; Podman has neither |
-| B6 | Copacetic patch | **blocker** | `BkAddr:"docker://"` BuildKit; unavailable on Podman |
+| B4 | Swarm reachable | **gated ✓** | InitSwarm/JoinSwarm/LeaveSwarm/UnlockSwarm short-circuit with `ErrSwarmUnsupportedOnPodman` (4xx) on Podman. Frontend nav-hide of `/swarm/cluster` is a follow-up (needs generated type). |
+| B5 | BuildKit builds | **gated ✓** | `BuildService.BuildImage` returns `ErrBuildUnsupportedOnPodman` (4xx) instead of dialing BuildKit /grpc+/session. |
+| B6 | Copacetic patch | **gated ✓** | `ImagePatchService.PatchImage` returns `ErrPatchUnsupportedOnPodman` (4xx) instead of a BuildKit `docker://` dial. |
 | B7 | Short-name pulls | **blocker** | no implicit `docker.io`; headless enforcing fails; ships bare `alpine:latest` |
 | D1 | Daemonless UX | degraded | socket off by default; connect errors say "Docker" |
 | ~~D2~~ | Default network | **moot (gated)** | Compat API aliases the default net to `bridge` (NOT `podman`) — `IsDefaultNetwork` already matches. Book-based finding; disproved by the sim/live gate. |
