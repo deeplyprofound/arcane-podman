@@ -1,0 +1,23 @@
+{
+    "ImageUsage": {
+        "Items": [
+            {
+                "Containers": 0,
+                "Created": 1781568080,
+                "Id": "1991bd789d7184290c3cce84fd6af068b8b745e9bddf178661ce7f5ecf68135c",
+                "Labels": {},
+                "ParentId": "",
+                "RepoDigests": null,
+                "RepoTags": [
+                    "latest"
+                ],
+                "SharedSize": 0,
+                "Size": 8951415
+            }
+        ],
+        "TotalSize": 8951415
+    },
+    "ContainerUsage": {},
+    "VolumeUsage": {},
+    "BuildCacheUsage": {}
+}

@@ -1,0 +1,183 @@
+{
+    "Id": "ab50c7a4e5999543bb2baa20faea4fd3afa88a103742d516e8556cfd705b35f1",
+    "Created": "2026-09-08T06:09:55.619734107Z",
+    "Path": "sleep",
+    "Args": [
+        "30"
+    ],
+    "State": {
+        "Status": "created",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "0001-01-01T00:00:00Z",
+        "FinishedAt": "0001-01-01T00:00:00Z"
+    },
+    "Image": "sha256:1991bd789d7184290c3cce84fd6af068b8b745e9bddf178661ce7f5ecf68135c",
+    "ResolvConfPath": "",
+    "HostnamePath": "",
+    "HostsPath": "",
+    "LogPath": "",
+    "Name": "/sim_probe_ctr",
+    "RestartCount": 0,
+    "Driver": "overlay",
+    "Platform": "linux",
+    "MountLabel": "system_u:object_r:container_file_t:s0:c518,c528",
+    "ProcessLabel": "system_u:system_r:container_t:s0:c518,c528",
+    "AppArmorProfile": "",
+    "ExecIDs": [],
+    "HostConfig": {
+        "Binds": [
+            "sim_probe_vol:/data:rprivate,nosuid,nodev,rbind"
+        ],
+        "ContainerIDFile": "",
+        "LogConfig": {
+            "Type": "journald",
+            "Config": null
+        },
+        "NetworkMode": "bridge",
+        "PortBindings": {},
+        "RestartPolicy": {
+            "Name": "no",
+            "MaximumRetryCount": 0
+        },
+        "AutoRemove": false,
+        "VolumeDriver": "",
+        "VolumesFrom": null,
+        "ConsoleSize": [
+            0,
+            0
+        ],
+        "CapAdd": [],
+        "CapDrop": [],
+        "CgroupnsMode": "private",
+        "Dns": [],
+        "DnsOptions": null,
+        "DnsSearch": null,
+        "ExtraHosts": null,
+        "GroupAdd": null,
+        "IpcMode": "shareable",
+        "Cgroup": "",
+        "Links": null,
+        "OomScoreAdj": 0,
+        "PidMode": "private",
+        "Privileged": false,
+        "PublishAllPorts": false,
+        "ReadonlyRootfs": false,
+        "SecurityOpt": [],
+        "UTSMode": "private",
+        "UsernsMode": "",
+        "ShmSize": 65536000,
+        "Runtime": "oci",
+        "Isolation": "",
+        "CpuShares": 0,
+        "Memory": 67108864,
+        "NanoCpus": 0,
+        "CgroupParent": "user.slice",
+        "BlkioWeight": 0,
+        "BlkioWeightDevice": null,
+        "BlkioDeviceReadBps": null,
+        "BlkioDeviceWriteBps": null,
+        "BlkioDeviceReadIOps": null,
+        "BlkioDeviceWriteIOps": null,
+        "CpuPeriod": 0,
+        "CpuQuota": 0,
+        "CpuRealtimePeriod": 0,
+        "CpuRealtimeRuntime": 0,
+        "CpusetCpus": "",
+        "CpusetMems": "",
+        "Devices": [],
+        "DeviceCgroupRules": null,
+        "DeviceRequests": null,
+        "MemoryReservation": 0,
+        "MemorySwap": 134217728,
+        "MemorySwappiness": 60,
+        "OomKillDisable": false,
+        "PidsLimit": 0,
+        "Ulimits": [],
+        "CpuCount": 0,
+        "CpuPercent": 0,
+        "IOMaximumIOps": 0,
+        "IOMaximumBandwidth": 0,
+        "MaskedPaths": null,
+        "ReadonlyPaths": null
+    },
+    "GraphDriver": {
+        "Data": {
+            "LowerDir": "/var/home/core/.local/share/containers/storage/overlay/b2848c02ac6ff53d265469b5b30f649f335e546a83330cd8916d54e65e640409/diff",
+            "UpperDir": "/var/home/core/.local/share/containers/storage/overlay/c71687d72a0eeccbb1e4405de0ffbfbab84733c5ee62e1064915e35ec174fa71/diff",
+            "WorkDir": "/var/home/core/.local/share/containers/storage/overlay/c71687d72a0eeccbb1e4405de0ffbfbab84733c5ee62e1064915e35ec174fa71/work"
+        },
+        "Name": "overlay"
+    },
+    "SizeRootFs": 0,
+    "Mounts": [
+        {
+            "Type": "volume",
+            "Name": "sim_probe_vol",
+            "Source": "/var/home/core/.local/share/containers/storage/volumes/sim_probe_vol/_data",
+            "Destination": "/data",
+            "Driver": "local",
+            "Mode": "",
+            "RW": true,
+            "Propagation": "rprivate"
+        }
+    ],
+    "NetworkSettings": {
+        "SandboxID": "",
+        "SandboxKey": "",
+        "Ports": {},
+        "Networks": {
+            "podman": {
+                "IPAMConfig": null,
+                "Links": null,
+                "Aliases": [
+                    "ab50c7a4e599"
+                ],
+                "DriverOpts": null,
+                "GwPriority": 0,
+                "NetworkID": "2f259bab93aaaaa2542ba43ef33eb990d0999ee1b9924b557b7be53c0b7a1bb9",
+                "EndpointID": "",
+                "Gateway": "",
+                "IPAddress": "",
+                "MacAddress": "",
+                "IPPrefixLen": 0,
+                "IPv6Gateway": "",
+                "GlobalIPv6Address": "",
+                "GlobalIPv6PrefixLen": 0,
+                "DNSNames": null
+            }
+        }
+    },
+    "Config": {
+        "Hostname": "ab50c7a4e599",
+        "Domainname": "",
+        "User": "",
+        "AttachStdin": false,
+        "AttachStdout": false,
+        "AttachStderr": false,
+        "Tty": false,
+        "OpenStdin": false,
+        "StdinOnce": false,
+        "Env": [
+            "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "container=podman"
+        ],
+        "Cmd": [
+            "sleep",
+            "30"
+        ],
+        "Image": "docker.io/library/alpine:latest",
+        "Volumes": null,
+        "WorkingDir": "/",
+        "Entrypoint": [],
+        "Labels": {},
+        "StopSignal": "15",
+        "StopTimeout": 10
+    }
+}

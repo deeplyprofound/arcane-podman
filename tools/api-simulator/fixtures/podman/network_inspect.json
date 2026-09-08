@@ -1,0 +1,32 @@
+{
+    "Name": "sim_probe_net",
+    "Id": "5ee0a742a60c2aed4d95330649f9cd85ee5431c3d65e5594e8a363ac17778f46",
+    "Created": "2026-09-08T06:09:55.475634982Z",
+    "Scope": "local",
+    "Driver": "bridge",
+    "EnableIPv4": true,
+    "EnableIPv6": false,
+    "IPAM": {
+        "Driver": "default",
+        "Options": {
+            "driver": "host-local"
+        },
+        "Config": [
+            {
+                "Subnet": "10.89.0.0/24",
+                "IPRange": "",
+                "Gateway": "10.89.0.1"
+            }
+        ]
+    },
+    "Internal": false,
+    "Attachable": false,
+    "Ingress": false,
+    "ConfigFrom": {
+        "Network": ""
+    },
+    "ConfigOnly": false,
+    "Options": {},
+    "Labels": {},
+    "Containers": {}
+}

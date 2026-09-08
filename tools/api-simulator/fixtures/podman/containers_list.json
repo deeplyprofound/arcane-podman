@@ -1,0 +1,64 @@
+[
+    {
+        "Id": "ab50c7a4e5999543bb2baa20faea4fd3afa88a103742d516e8556cfd705b35f1",
+        "Names": [
+            "/sim_probe_ctr"
+        ],
+        "Image": "docker.io/library/alpine:latest",
+        "ImageID": "sha256:1991bd789d7184290c3cce84fd6af068b8b745e9bddf178661ce7f5ecf68135c",
+        "Command": "sleep 30",
+        "Created": 1788847795,
+        "Ports": [],
+        "Labels": {},
+        "State": "created",
+        "Status": "Created",
+        "HostConfig": {
+            "NetworkMode": "bridge",
+            "Annotations": {
+                "io.container.manager": "libpod",
+                "org.opencontainers.image.stopSignal": "15",
+                "org.systemd.property.KillSignal": "15",
+                "org.systemd.property.TimeoutStopUSec": "uint64 10000000"
+            }
+        },
+        "Health": {
+            "Status": "none",
+            "FailingStreak": 0
+        },
+        "NetworkSettings": {
+            "Networks": {
+                "podman": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": [
+                        "ab50c7a4e599"
+                    ],
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "2f259bab93aaaaa2542ba43ef33eb990d0999ee1b9924b557b7be53c0b7a1bb9",
+                    "EndpointID": "",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "MacAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": null
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "sim_probe_vol",
+                "Source": "/var/home/core/.local/share/containers/storage/volumes/sim_probe_vol/_data",
+                "Destination": "/data",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ]
+    }
+]

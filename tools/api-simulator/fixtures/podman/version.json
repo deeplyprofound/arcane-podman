@@ -1,0 +1,45 @@
+{
+    "Platform": {
+        "Name": "linux/arm64/fedora-44"
+    },
+    "Components": [
+        {
+            "Name": "Podman Engine",
+            "Version": "6.1.1",
+            "Details": {
+                "APIVersion": "6.1.1",
+                "Arch": "arm64",
+                "BuildTime": "2026-09-01T20:00:00-04:00",
+                "Experimental": "false",
+                "GitCommit": "8303f2e25b675ea7f82099d615c60969aec15870",
+                "GoVersion": "go1.26.7-X:nodwarf5",
+                "KernelVersion": "7.1.8-200.fc44.aarch64",
+                "MinAPIVersion": "4.0.0",
+                "Os": "linux"
+            }
+        },
+        {
+            "Name": "Conmon",
+            "Version": "conmon version 2.2.1, commit: ",
+            "Details": {
+                "Package": "conmon-2.2.1-2.fc44.aarch64"
+            }
+        },
+        {
+            "Name": "OCI Runtime (crun)",
+            "Version": "crun version 1.29.1\ncommit: f0d911de5587342cfeb16473bf32ecdfeaf25957\nrundir: /run/user/501/crun\nspec: 1.0.0\n+SYSTEMD +SELINUX +APPARMOR +CAP +SECCOMP +EBPF +CRIU +LIBKRUN +WASM:wasmedge +JSON_C",
+            "Details": {
+                "Package": "crun-1.29.1-1.fc44.aarch64"
+            }
+        }
+    ],
+    "Version": "6.1.1",
+    "ApiVersion": "1.44",
+    "MinAPIVersion": "1.24",
+    "GitCommit": "8303f2e25b675ea7f82099d615c60969aec15870",
+    "GoVersion": "go1.26.7-X:nodwarf5",
+    "Os": "linux",
+    "Arch": "arm64",
+    "KernelVersion": "7.1.8-200.fc44.aarch64",
+    "BuildTime": "2026-09-01T20:00:00-04:00"
+}

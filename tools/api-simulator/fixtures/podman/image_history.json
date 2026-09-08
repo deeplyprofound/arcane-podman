@@ -1,0 +1,22 @@
+[
+    {
+        "Id": "sha256:1991bd789d7184290c3cce84fd6af068b8b745e9bddf178661ce7f5ecf68135c",
+        "Created": 1781568080,
+        "CreatedBy": "CMD [\"/bin/sh\"]",
+        "Tags": [
+            "docker.io/library/alpine:latest"
+        ],
+        "Size": 0,
+        "Comment": "buildkit.dockerfile.v0"
+    },
+    {
+        "Id": "sha256:<missing>",
+        "Created": 1781568080,
+        "CreatedBy": "ADD alpine-minirootfs-3.24.1-aarch64.tar.gz / # buildkit",
+        "Tags": [
+            "docker.io/library/alpine:latest"
+        ],
+        "Size": 8939520,
+        "Comment": "buildkit.dockerfile.v0"
+    }
+]

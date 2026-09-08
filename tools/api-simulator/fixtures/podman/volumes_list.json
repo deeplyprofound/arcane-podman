@@ -1,0 +1,14 @@
+{
+    "Volumes": [
+        {
+            "CreatedAt": "2026-09-08T02:09:55-04:00",
+            "Driver": "local",
+            "Labels": {},
+            "Mountpoint": "/var/home/core/.local/share/containers/storage/volumes/sim_probe_vol/_data",
+            "Name": "sim_probe_vol",
+            "Options": {},
+            "Scope": "local"
+        }
+    ],
+    "Warnings": []
+}

@@ -1,0 +1,43 @@
+{
+    "Id": "sha256:1991bd789d7184290c3cce84fd6af068b8b745e9bddf178661ce7f5ecf68135c",
+    "RepoTags": [
+        "docker.io/library/alpine:latest"
+    ],
+    "RepoDigests": [
+        "docker.io/library/alpine@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b",
+        "docker.io/library/alpine@sha256:e7a1a92a5bfeee40966aea60f0796b0e7917cc35591542701834f03a68fa3d18"
+    ],
+    "Comment": "buildkit.dockerfile.v0",
+    "Created": "2026-06-16T00:01:20.474100947Z",
+    "Config": {
+        "Env": [
+            "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        ],
+        "Cmd": [
+            "/bin/sh"
+        ],
+        "WorkingDir": "/"
+    },
+    "Architecture": "arm64",
+    "Os": "linux",
+    "Size": 8951415,
+    "GraphDriver": {
+        "Data": {
+            "UpperDir": "/var/home/core/.local/share/containers/storage/overlay/b2848c02ac6ff53d265469b5b30f649f335e546a83330cd8916d54e65e640409/diff",
+            "WorkDir": "/var/home/core/.local/share/containers/storage/overlay/b2848c02ac6ff53d265469b5b30f649f335e546a83330cd8916d54e65e640409/work"
+        },
+        "Name": "overlay"
+    },
+    "RootFS": {
+        "Type": "layers",
+        "Layers": [
+            "sha256:b2848c02ac6ff53d265469b5b30f649f335e546a83330cd8916d54e65e640409"
+        ]
+    },
+    "Metadata": {
+        "LastTagTime": "0001-01-01T00:00:00Z"
+    },
+    "Parent": "",
+    "DockerVersion": "",
+    "Author": ""
+}

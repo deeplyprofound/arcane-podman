@@ -229,6 +229,47 @@ _test-all:
 test target="all":
     @just "_test-{{ target }}"
 
+# Boot the drift-faithful engine API simulator (podman|docker) on a unix socket.
+[group('test')]
+sim profile="podman" socket="/tmp/engine-sim.sock":
+    cd tools/api-simulator && uv run python -m engine_sim --profile {{ profile }} --socket {{ socket }}
+
+# VM-free engine gates: boot the simulator (podman|docker), run the Go
+# integration tests against it, then tear it down. The primary Podman gate.
+[group('test')]
+test-sim profile="podman":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sock="/tmp/engine-sim-{{ profile }}.sock"
+    rm -f "$sock"
+    ( cd tools/api-simulator && uv run python -m engine_sim --profile {{ profile }} --socket "$sock" ) &
+    sim_pid=$!
+    trap 'kill $sim_pid 2>/dev/null || true; rm -f "$sock"' EXIT
+    for _ in $(seq 1 60); do [ -S "$sock" ] && break; sleep 0.5; done
+    export DOCKER_HOST="unix://${sock}"
+    [ "{{ profile }}" = "podman" ] && export ARCANE_EXPECT_PODMAN=1 || true
+    go -C server/backend test -tags integration,exclude_frontend ./... -run Integration -v
+
+# Run engine integration guardrails against a live rootless Podman machine.
+# Boots one if needed (podman machine init && start), derives DOCKER_HOST from
+# it, and runs the `integration`-tagged tests. This is our real-engine guardrail
+# for Podman drift work — use it while developing each phase.
+[group('test')]
+test-podman:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! command -v podman >/dev/null 2>&1; then echo "podman not installed (brew install podman)"; exit 1; fi
+    if ! podman machine inspect >/dev/null 2>&1; then
+        echo "no podman machine — creating one (rootless Fedora CoreOS)..."
+        podman machine init
+    fi
+    podman machine start 2>/dev/null || true
+    sock=$(podman machine inspect --format '{{ "{{" }}.ConnectionInfo.PodmanSocket.Path{{ "}}" }}' | head -1)
+    export DOCKER_HOST="unix://${sock}"
+    export ARCANE_EXPECT_PODMAN=1
+    echo "DOCKER_HOST=$DOCKER_HOST"
+    go -C server/backend test -tags integration,exclude_frontend ./... -run Integration -v
+
 # -----------------------------------------------------------------------------
 # Quality: format, lint, and fixes
 # -----------------------------------------------------------------------------
