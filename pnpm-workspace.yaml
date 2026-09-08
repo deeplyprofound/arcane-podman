@@ -1,6 +1,6 @@
 packages:
   - clients/webapp/svelte
-  - tests
+  - pipes/gates
   - email-templates
 
 packageExtensions:

@@ -32,7 +32,7 @@ README.md
 LICENSE
 *.md
 docs
-tests
+pipes/gates
 **/*.test.js
 **/*.spec.js
 **/*.stories.js

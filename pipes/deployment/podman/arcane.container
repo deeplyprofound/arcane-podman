@@ -1,0 +1,25 @@
+# Arcane-Podman manager — quadlet unit (WIP scaffold; finalize + server-test).
+# Install: ~/.config/containers/systemd/ (rootless) or /etc/containers/systemd/ (rootful),
+# then `systemctl [--user] daemon-reload && systemctl [--user] start arcane.service`.
+[Unit]
+Description=Arcane-Podman container manager
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=quay.io/iguessipentest/arcane-podman:latest
+PublishPort=3552:3552
+Volume=arcane-data:/app/data
+# Mount the rootless Podman socket so Arcane manages this host's containers.
+# Arcane auto-detects it; mounting at the Docker path keeps zero-config behavior.
+Volume=%t/podman/podman.sock:/var/run/docker.sock:z
+# Provide a real key in production (systemd credential or drop-in), not inline.
+# Environment=ENCRYPTION_KEY=change-me-32-characters-minimum!!
+AutoUpdate=registry
+
+[Service]
+Restart=always
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

@@ -6,7 +6,7 @@
 set -euo pipefail
 
 # Configuration
-readonly COMPOSE_FILE="docker/compose.dev.yaml"
+readonly COMPOSE_FILE="pipes/deployment/docker/compose.dev.yaml"
 readonly PROJECT_NAME="arcane-dev"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
@@ -207,7 +207,7 @@ show_env_config() {
             grep -E "^[A-Z_]+" .env | sort
             echo "----------------------------------------"
         else
-            log_warning "No .env file found (not needed for development - values are in docker/compose.dev.yaml)"
+            log_warning "No .env file found (not needed for development - values are in pipes/deployment/docker/compose.dev.yaml)"
         fi
     fi
 }

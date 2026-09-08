@@ -3,7 +3,7 @@
 	"private": true,
 	"workspaces": [
 		"clients/webapp/svelte",
-		"tests",
+		"pipes/gates",
 		"email-templates"
 	],
 	"scripts": {
