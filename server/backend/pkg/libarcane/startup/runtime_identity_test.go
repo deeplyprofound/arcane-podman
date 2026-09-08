@@ -506,3 +506,34 @@ func TestPrepareWritablePathsInternalChownsTopLevelProjectsShallowly(t *testing.
 	require.False(t, visited[filepath.Clean(demoDir)], "subdir inside projects dir must NOT be chowned")
 	require.False(t, visited[filepath.Clean(keepFile)], "file inside projects dir must NOT be chowned")
 }
+
+func TestDefaultRuntimeIdentityRequest_SocketOwner(t *testing.T) {
+	rootlessOwner := func(string) mo.Option[socketOwner] { return mo.Some(socketOwner{UID: 1000, GID: 1000}) }
+	rootOwner := func(string) mo.Option[socketOwner] { return mo.Some(socketOwner{UID: 0, GID: 0}) }
+	noOwner := func(string) mo.Option[socketOwner] { return mo.None[socketOwner]() }
+
+	// Outside a container: identity switching disabled regardless of socket owner.
+	req := defaultRuntimeIdentityRequestInternal("unix:///run/user/1000/podman/podman.sock", false, rootlessOwner)
+	require.False(t, req.Enabled)
+
+	// In container + user-owned socket (rootless): run as the socket owner.
+	req = defaultRuntimeIdentityRequestInternal("unix:///run/user/1000/podman/podman.sock", true, rootlessOwner)
+	require.True(t, req.Enabled)
+	require.Equal(t, 1000, req.UID)
+	require.Equal(t, 1000, req.GID)
+	require.Equal(t, uint32(1000), req.CredentialUID)
+	require.Equal(t, uint32(1000), req.CredentialGID)
+
+	// In container + root-owned socket (rootful Docker/Podman): hardened 65532 default.
+	req = defaultRuntimeIdentityRequestInternal("unix:///var/run/docker.sock", true, rootOwner)
+	require.Equal(t, defaultRuntimeUID, req.UID)
+	require.Equal(t, defaultRuntimeGID, req.GID)
+
+	// In container + owner unknown (socket absent / non-unix host): default.
+	req = defaultRuntimeIdentityRequestInternal("unix:///var/run/docker.sock", true, noOwner)
+	require.Equal(t, defaultRuntimeUID, req.UID)
+
+	// Nil resolver: default (defensive).
+	req = defaultRuntimeIdentityRequestInternal("unix:///var/run/docker.sock", true, nil)
+	require.Equal(t, defaultRuntimeUID, req.UID)
+}

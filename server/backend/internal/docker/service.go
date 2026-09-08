@@ -94,6 +94,18 @@ func newDockerClientInternal(ctx context.Context, host string) (*client.Client, 
 	return configuredClient, nil
 }
 
+// containerEngineUnreachableError wraps a connection/ping failure with guidance
+// covering both engines — the engine can't be identified until we connect, and
+// Podman in particular is daemonless: its Docker-compatible API socket is NOT
+// enabled by default and stops after idling, unlike an always-on dockerd.
+func containerEngineUnreachableError(host string, cause error) error {
+	return errors.WrapIff(cause,
+		"could not reach a container engine at %q — if using Docker, ensure the daemon is running; "+
+			"if using Podman, enable its API socket: `systemctl --user enable --now podman.socket` (rootless) "+
+			"or `sudo systemctl enable --now podman.socket` (rootful)",
+		host)
+}
+
 func detectDockerAPIVersionInternal(ctx context.Context, host string) (string, error) {
 	probeClient, err := client.New(
 		client.WithHost(host),
@@ -108,7 +120,7 @@ func detectDockerAPIVersionInternal(ctx context.Context, host string) (string, e
 
 	pingResult, err := probeClient.Ping(ctx, client.PingOptions{})
 	if err != nil {
-		return "", errors.WrapIf(err, "failed to negotiate Docker API version")
+		return "", containerEngineUnreachableError(host, err)
 	}
 
 	apiVersion := strings.TrimSpace(pingResult.APIVersion)

@@ -90,3 +90,19 @@ func resolveSocketGroupInternal(socketPath string) mo.Option[uint32] {
 
 	return mo.Some(stat.Gid)
 }
+
+func resolveSocketOwnerInternal(socketPath string) mo.Option[socketOwner] {
+	// os.* rather than acfs: the engine socket is a host-configured system path
+	// probed during identity bootstrap, not under any acfs root.
+	info, err := os.Stat(socketPath)
+	if err != nil {
+		return mo.None[socketOwner]()
+	}
+
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return mo.None[socketOwner]()
+	}
+
+	return mo.Some(socketOwner{UID: stat.Uid, GID: stat.Gid})
+}

@@ -26,6 +26,18 @@ const (
 
 var lchownFn = os.Lchown
 
+// socketOwner is the owning UID/GID of a unix socket, used to decide the
+// runtime identity when the engine socket is user-owned (rootless).
+type socketOwner struct {
+	UID uint32
+	GID uint32
+}
+
+// resolveSocketOwnerFn resolves the owning UID/GID of a unix socket path.
+// Platform-specific: linux stats the socket; other platforms return None
+// (they don't re-exec). Overridable in tests.
+var resolveSocketOwnerFn = resolveSocketOwnerInternal
+
 type runtimeIdentityRequest struct {
 	Enabled       bool
 	UID           int
@@ -121,11 +133,11 @@ func loadRuntimeIdentityRequestInternal(cfg *RuntimeIdentityConfig, inContainer 
 	pgid := strings.TrimSpace(cfg.PGID)
 
 	if puid == "" && pgid == "" {
-		return defaultRuntimeIdentityRequestInternal(cfg.DockerHost, inContainer), "", nil
+		return defaultRuntimeIdentityRequestInternal(cfg.DockerHost, inContainer, resolveSocketOwnerFn), "", nil
 	}
 
 	if puid == "" || pgid == "" {
-		req := defaultRuntimeIdentityRequestInternal(cfg.DockerHost, inContainer)
+		req := defaultRuntimeIdentityRequestInternal(cfg.DockerHost, inContainer, resolveSocketOwnerFn)
 		if inContainer {
 			return req, "PUID and PGID must both be set to override the default non-root runtime user; continuing with the default non-root runtime user", nil
 		}
@@ -152,7 +164,7 @@ func loadRuntimeIdentityRequestInternal(cfg *RuntimeIdentityConfig, inContainer 
 	}, "", nil
 }
 
-func defaultRuntimeIdentityRequestInternal(dockerHost string, inContainer bool) runtimeIdentityRequest {
+func defaultRuntimeIdentityRequestInternal(dockerHost string, inContainer bool, resolveSocketOwner func(string) mo.Option[socketOwner]) runtimeIdentityRequest {
 	if !inContainer {
 		return runtimeIdentityRequest{
 			Enabled:    false,
@@ -160,12 +172,28 @@ func defaultRuntimeIdentityRequestInternal(dockerHost string, inContainer bool) 
 		}
 	}
 
+	uid, gid := defaultRuntimeUID, defaultRuntimeGID
+
+	// If the engine socket is owned by a non-root user, dropping to the
+	// distroless 65532 user cannot open it. This is the rootless case —
+	// notably rootless Podman, whose socket is user-owned even when bind-
+	// mounted at the Docker path (so path inspection alone can't detect it).
+	// Run as the socket's owner so the API stays reachable. A root-owned
+	// socket (rootful Docker/Podman) keeps the hardened 65532 default.
+	if resolveSocketOwner != nil {
+		if socketPath, ok := dockerSocketPathInternal(dockerHost).Get(); ok {
+			if owner, ok := resolveSocketOwner(socketPath).Get(); ok && owner.UID != 0 {
+				uid, gid = int(owner.UID), int(owner.GID)
+			}
+		}
+	}
+
 	return runtimeIdentityRequest{
 		Enabled:       true,
-		UID:           defaultRuntimeUID,
-		GID:           defaultRuntimeGID,
-		CredentialUID: uint32(defaultRuntimeUID),
-		CredentialGID: uint32(defaultRuntimeGID),
+		UID:           uid,
+		GID:           gid,
+		CredentialUID: uint32(uid),
+		CredentialGID: uint32(gid),
 		DockerHost:    dockerHost,
 	}
 }
