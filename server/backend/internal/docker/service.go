@@ -45,6 +45,12 @@ type DockerClientService struct {
 	mu              sync.Mutex
 	eventBus        *bus.DockerEventBus
 
+	// engineInfo caches the detected container engine (docker vs podman) + its
+	// cgroup version. Engine identity is stable per connection, so it is
+	// computed once and reset whenever the underlying client is (re)created.
+	engineInfo      libarcane.EngineCompatibilityInfo
+	engineInfoReady bool
+
 	// Coalesce concurrent full-inventory list calls so overlapping requests
 	// (e.g. the Homepage widget's simultaneous counts endpoints) decode one
 	// Docker response instead of one per caller. Per-instance on purpose:
@@ -163,9 +169,41 @@ func (s *DockerClientService) GetClient(ctx context.Context) (*client.Client, er
 	s.Client = cli
 	s.clientVersion = cli.ClientVersion()
 	s.clientLastProbe = time.Now()
+	s.engineInfoReady = false
 	s.mu.Unlock()
 
 	return cli, nil
+}
+
+// EngineInfo returns the detected container engine (docker vs podman) and its
+// cgroup version, computed once per connection and cached. Feature gating and
+// engine-specific behavior across the backend should key off this rather than
+// re-probing the daemon.
+func (s *DockerClientService) EngineInfo(ctx context.Context) (libarcane.EngineCompatibilityInfo, error) {
+	s.mu.Lock()
+	if s.engineInfoReady {
+		info := s.engineInfo
+		s.mu.Unlock()
+		return info, nil
+	}
+	s.mu.Unlock()
+
+	cli, err := s.GetClient(ctx)
+	if err != nil {
+		return libarcane.EngineCompatibilityInfo{}, err
+	}
+
+	info, err := libarcane.DetectEngineInfo(ctx, cli)
+	if err != nil {
+		return libarcane.EngineCompatibilityInfo{}, err
+	}
+
+	s.mu.Lock()
+	s.engineInfo = info
+	s.engineInfoReady = true
+	s.mu.Unlock()
+
+	return info, nil
 }
 
 // RefreshClient probes the Docker daemon and recreates the cached client when
@@ -201,6 +239,7 @@ func (s *DockerClientService) RefreshClient(ctx context.Context) error {
 	s.Client = cli
 	s.clientVersion = apiVersion
 	s.clientLastProbe = time.Now()
+	s.engineInfoReady = false
 	s.mu.Unlock()
 
 	closeDockerClientInternal(oldClient, "failed to close replaced Docker client")

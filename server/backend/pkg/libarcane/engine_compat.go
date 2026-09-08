@@ -52,6 +52,39 @@ func PrepareRecreateHostConfigForEngine(ctx context.Context, dockerClient *clien
 	return cloned, sanitized, engineInfo, nil
 }
 
+// IsPodman reports whether the detected engine is Podman.
+func (e EngineCompatibilityInfo) IsPodman() bool {
+	return strings.EqualFold(strings.TrimSpace(e.Name), "podman")
+}
+
+// EngineCompatibilityFrom derives the engine identity from an already-fetched
+// ServerVersion + Info, without any additional daemon round-trip. Use this when
+// the caller already holds both (e.g. the system-info handler).
+func EngineCompatibilityFrom(version client.ServerVersionResult, info systemtypes.Info) EngineCompatibilityInfo {
+	return detectEngineCompatibilityInfoInternal(version, info)
+}
+
+// DetectEngineInfo fetches the daemon's ServerVersion + Info and returns the
+// engine identity (name + cgroup version). Callers should cache the result;
+// engine identity is stable for the life of a connection.
+func DetectEngineInfo(ctx context.Context, dockerClient *client.Client) (EngineCompatibilityInfo, error) {
+	if dockerClient == nil {
+		return EngineCompatibilityInfo{}, nil
+	}
+
+	serverVersion, err := dockerClient.ServerVersion(ctx, client.ServerVersionOptions{})
+	if err != nil {
+		return EngineCompatibilityInfo{}, err
+	}
+
+	infoResult, err := dockerClient.Info(ctx, client.InfoOptions{})
+	if err != nil {
+		return EngineCompatibilityInfo{}, err
+	}
+
+	return detectEngineCompatibilityInfoInternal(serverVersion, infoResult.Info), nil
+}
+
 func cloneContainerHostConfigInternal(hostConfig *containertypes.HostConfig) *containertypes.HostConfig {
 	if hostConfig == nil {
 		return nil

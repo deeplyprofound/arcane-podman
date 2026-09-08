@@ -141,3 +141,55 @@ func TestDetectEngineCompatibilityInfoInternal(t *testing.T) {
 		require.Equal(t, "2", engineInfo.CgroupVersion)
 	})
 }
+
+func TestEngineCompatibilityFrom(t *testing.T) {
+	tests := []struct {
+		name       string
+		version    client.ServerVersionResult
+		info       systemtypes.Info
+		wantName   string
+		wantPodman bool
+		wantCgroup string
+	}{
+		{
+			name:       "podman via platform name + cgroup v2",
+			version:    client.ServerVersionResult{Platform: struct{ Name string }{Name: "Podman Engine"}},
+			info:       systemtypes.Info{CgroupVersion: "2"},
+			wantName:   "podman",
+			wantPodman: true,
+			wantCgroup: "2",
+		},
+		{
+			name:       "docker via platform name (version string alone is just a number)",
+			version:    client.ServerVersionResult{Platform: struct{ Name string }{Name: "Docker Engine - Community"}},
+			info:       systemtypes.Info{ServerVersion: "27.1.1", CgroupVersion: "2"},
+			wantName:   "docker",
+			wantPodman: false,
+			wantCgroup: "2",
+		},
+		{
+			name:       "unknown engine",
+			version:    client.ServerVersionResult{},
+			info:       systemtypes.Info{CgroupVersion: "1"},
+			wantName:   "",
+			wantPodman: false,
+			wantCgroup: "1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := EngineCompatibilityFrom(tt.version, tt.info)
+			require.Equal(t, tt.wantName, got.Name)
+			require.Equal(t, tt.wantCgroup, got.CgroupVersion)
+			require.Equal(t, tt.wantPodman, got.IsPodman())
+		})
+	}
+}
+
+func TestDetectEngineInfo_NilClient(t *testing.T) {
+	info, err := DetectEngineInfo(t.Context(), nil)
+	require.NoError(t, err)
+	require.Empty(t, info.Name)
+	require.False(t, info.IsPodman())
+}
