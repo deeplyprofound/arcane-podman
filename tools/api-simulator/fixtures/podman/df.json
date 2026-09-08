@@ -1,23 +1,34 @@
 {
-    "ImageUsage": {
-        "Items": [
-            {
-                "Containers": 0,
-                "Created": 1781568080,
-                "Id": "1991bd789d7184290c3cce84fd6af068b8b745e9bddf178661ce7f5ecf68135c",
-                "Labels": {},
-                "ParentId": "",
-                "RepoDigests": null,
-                "RepoTags": [
-                    "latest"
-                ],
-                "SharedSize": 0,
-                "Size": 8951415
-            }
-        ],
-        "TotalSize": 8951415
-    },
-    "ContainerUsage": {},
-    "VolumeUsage": {},
-    "BuildCacheUsage": {}
+    "LayersSize": 13376087,
+    "Images": [
+        {
+            "Containers": 0,
+            "Created": 1781568080,
+            "Id": "1991bd789d7184290c3cce84fd6af068b8b745e9bddf178661ce7f5ecf68135c",
+            "Labels": {},
+            "ParentId": "",
+            "RepoDigests": null,
+            "RepoTags": [
+                "latest"
+            ],
+            "SharedSize": 0,
+            "Size": 8951415
+        },
+        {
+            "Containers": 0,
+            "Created": 1778638909,
+            "Id": "e0e8b3cbfed68a90084781e2962f9c0deead51c5a3f11a488eef0283a4284bc2",
+            "Labels": {},
+            "ParentId": "",
+            "RepoDigests": null,
+            "RepoTags": [
+                "latest"
+            ],
+            "SharedSize": 0,
+            "Size": 4424672
+        }
+    ],
+    "Containers": [],
+    "Volumes": [],
+    "BuildCache": []
 }

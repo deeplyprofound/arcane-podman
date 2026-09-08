@@ -1,16 +1,12 @@
 {
-    "ID": "a61069a3-84b0-4246-b6f6-080a44a926c2",
+    "ID": "8129247c-7d05-4c41-babf-50d18ad0c173",
     "Containers": 0,
     "ContainersRunning": 0,
     "ContainersPaused": 0,
     "ContainersStopped": 0,
-    "Images": 1,
+    "Images": 2,
     "Driver": "overlay",
     "DriverStatus": [
-        [
-            "Supports volatile",
-            "true"
-        ],
         [
             "Backing Filesystem",
             "xfs"
@@ -30,6 +26,10 @@
         [
             "Supports shifting",
             "false"
+        ],
+        [
+            "Supports volatile",
+            "true"
         ]
     ],
     "Plugins": {
@@ -61,7 +61,7 @@
     "NFd": 12,
     "OomKillDisable": false,
     "NGoroutines": 13,
-    "SystemTime": "2026-09-08T02:09:54.523722246-04:00",
+    "SystemTime": "2026-09-08T03:16:51.198576153-04:00",
     "LoggingDriver": "",
     "CgroupDriver": "systemd",
     "NEventsListener": 0,
@@ -180,5 +180,5 @@
     "Rootless": true,
     "SwapFree": 0,
     "SwapTotal": 0,
-    "Uptime": "0h 13m 52.00s"
+    "Uptime": "0h 38m 55.00s"
 }

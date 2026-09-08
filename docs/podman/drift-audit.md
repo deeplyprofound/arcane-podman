@@ -54,7 +54,7 @@ network, messaging) off it. Nearly every finding below hangs off this.
 | D4 | Rootless ports | degraded | `<1024` publish fails; no inbound w/o forward — raw error |
 | ~~D5~~ | Restart policy | **mostly moot** | Compat API PRESERVES the policy name (`unless-stopped`→`unless-stopped`, verified live) — the book's `≡always` is a runtime/systemd mapping, not the API. Arcane's display is correct. Only the reboot-persistence caveat (`podman-restart.service`) is informational, not a code fix. |
 | D6 | Healthchecks | degraded | systemd-timer driven; rootless needs lingering; `StartInterval` ignored |
-| D7 | info/system df | degraded | empty GitCommit/BuildTime/BuildCache; no Swarm/Plugins sections |
+| ~~D7~~ | info/system df | **moot (gated)** | Book claim (empty GitCommit/BuildTime, no Swarm/Plugins, broken df) is FALSE over the VERSIONED compat: Components[].Details has GitCommit/GoVersion/BuildTime, /info has Swarm+Plugins, and /v1.44/system/df returns the Docker shape (only UNVERSIONED /system/df is libpod-shaped). Gated by DiskUsage test. |
 | D8 | Compose discovery | degraded | only matches `com.docker.compose.*`, misses `io.podman.compose.*` |
 | D9 | policy.json | degraded | signature rejection returns unclassified pull error |
 | D10 | Update digest | degraded | reconstructs `docker.io/library` instead of using `RepoDigests` |

@@ -64,3 +64,34 @@ func TestIntegration_CompatResolvesShortNames(t *testing.T) {
 		require.NotEqual(t, "docker.io/library/myreg.io/team/app:v1", tg)
 	}
 }
+
+// D7 guard: the VERSIONED compat /system/df returns the Docker shape
+// (LayersSize/Images/Containers/Volumes/BuildCache), so the typed moby
+// DiskUsage decodes non-empty. (Only the UNVERSIONED endpoint returns podman's
+// libpod ImageUsage/... shape — arcane's client is versioned.) This guards the
+// fixture from regressing to the libpod shape.
+func TestIntegration_DiskUsageDecodesDockerShape(t *testing.T) {
+	host := os.Getenv("DOCKER_HOST")
+	if host == "" {
+		t.Skip("DOCKER_HOST not set; run via `just test-sim`")
+	}
+	probe, err := client.New(client.WithHost(host))
+	require.NoError(t, err)
+	defer probe.Close()
+	ping, err := probe.Ping(t.Context(), client.PingOptions{})
+	require.NoError(t, err)
+	api := ping.APIVersion
+	if api == "" {
+		api = client.MinAPIVersion
+	}
+	cli, err := client.New(client.WithHost(host), client.WithAPIVersion(api))
+	require.NoError(t, err)
+	defer cli.Close()
+
+	du, err := cli.DiskUsage(t.Context(), client.DiskUsageOptions{})
+	require.NoError(t, err)
+	t.Logf("DiskUsage Images.TotalCount=%d Containers.TotalCount=%d", du.Images.TotalCount, du.Containers.TotalCount)
+	// The versioned df returns the Docker Images array; the client decodes it to
+	// a non-zero TotalCount. A libpod-shape (ImageUsage) response would yield 0.
+	require.Greater(t, du.Images.TotalCount, int64(0), "versioned /system/df must decode into the Docker DiskUsage shape")
+}
