@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
 from . import profiles
-from .store import NotFound, Store
+from .store import Conflict, NotFound, Store
 
 _VERSION_PREFIX = re.compile(r"^/v\d+(\.\d+)?(?=/)")
 
@@ -229,6 +229,122 @@ def build_app(profile_name: str, db_url: str = "sqlite+pysqlite:///:memory:") ->
         if not store.buildkit():
             return JSONResponse({"message": "BuildKit is not available on this engine"}, status_code=404)
         return JSONResponse({"note": "buildkit session not fully modeled by the simulator"}, status_code=200)
+
+    # ---- containers: lifecycle (extended) ----
+    @app.post("/containers/prune")
+    def containers_prune():
+        return JSONResponse(store.prune_containers())
+
+    @app.post("/containers/{ref}/rename")
+    def container_rename(ref: str, name: str = ""):
+        try:
+            store.rename_container(ref, name)
+            return Response(status_code=204)
+        except NotFound:
+            return nf(ref)
+
+    def _lifecycle(op, ref):
+        try:
+            op(ref)
+            return Response(status_code=204)
+        except NotFound:
+            return nf(ref)
+        except Conflict as e:
+            return JSONResponse({"message": str(e)}, status_code=409)
+
+    @app.post("/containers/{ref}/restart")
+    def container_restart(ref: str):
+        return _lifecycle(store.restart_container, ref)
+
+    @app.post("/containers/{ref}/pause")
+    def container_pause(ref: str):
+        return _lifecycle(store.pause_container, ref)
+
+    @app.post("/containers/{ref}/unpause")
+    def container_unpause(ref: str):
+        return _lifecycle(store.unpause_container, ref)
+
+    @app.post("/containers/{ref}/kill")
+    def container_kill(ref: str):
+        return _lifecycle(store.kill_container, ref)
+
+    @app.get("/containers/{ref}/stats")
+    def container_stats(ref: str, stream: bool = True):
+        try:
+            snap = store.container_stats(ref)
+        except NotFound:
+            return nf(ref)
+        if stream:
+            return StreamingResponse(iter([json.dumps(snap) + "\n"]), media_type="application/json")
+        return JSONResponse(snap)
+
+    # ---- images (extended) ----
+    @app.post("/images/prune")
+    def images_prune():
+        return JSONResponse(store.prune_images())
+
+    @app.get("/images/{ref:path}/json")
+    def image_inspect(ref: str):
+        try:
+            return JSONResponse(store.inspect_image(ref))
+        except NotFound:
+            return nf(ref)
+
+    @app.get("/images/{ref:path}/history")
+    def image_history(ref: str):
+        try:
+            return JSONResponse(store.image_history(ref))
+        except NotFound:
+            return nf(ref)
+
+    @app.post("/images/{ref:path}/tag")
+    def image_tag(ref: str, repo: str = "", tag: str = "latest"):
+        try:
+            store.tag_image(ref, repo, tag)
+            return Response(status_code=201)
+        except NotFound:
+            return nf(ref)
+
+    @app.delete("/images/{ref:path}")
+    def image_remove(ref: str, force: bool = False):
+        try:
+            return JSONResponse(store.remove_image(ref))
+        except NotFound:
+            return nf(ref)
+
+    # ---- volumes / networks prune + connect ----
+    @app.post("/volumes/prune")
+    def volumes_prune():
+        return JSONResponse(store.prune_volumes())
+
+    @app.post("/networks/prune")
+    def networks_prune():
+        return JSONResponse(store.prune_networks())
+
+    @app.post("/networks/{ref}/connect")
+    async def network_connect(ref: str, request: Request):
+        try:
+            store.connect_network(ref, (await body(request)).get("Container", ""))
+            return Response(status_code=200)
+        except NotFound:
+            return nf(ref)
+
+    @app.post("/networks/{ref}/disconnect")
+    async def network_disconnect(ref: str, request: Request):
+        try:
+            store.disconnect_network(ref, (await body(request)).get("Container", ""))
+            return Response(status_code=200)
+        except NotFound:
+            return nf(ref)
+
+    # ---- exec start ----
+    @app.post("/exec/{eid}/start")
+    def exec_start(eid: str):
+        try:
+            store.start_exec(eid)
+            return PlainTextResponse("", media_type="application/vnd.docker.raw-stream")
+        except NotFound:
+            return nf(eid)
 
     @app.get("/{full_path:path}")
     def catch_all(full_path: str):

@@ -47,6 +47,10 @@ class NotFound(Exception):
     pass
 
 
+class Conflict(Exception):
+    pass
+
+
 class Store:
     def __init__(self, profile: Profile, db_url: str = "sqlite+pysqlite:///:memory:"):
         self.profile = profile
@@ -268,8 +272,8 @@ class Store:
             return self._container_inspect_json(self._get_container(s, ref))
 
     def _state_obj(self, c: models.Container) -> dict[str, Any]:
-        running = c.state == "running"
-        return {"Status": c.state, "Running": running, "Paused": False, "Restarting": False,
+        running = c.state in ("running", "paused")
+        return {"Status": c.state, "Running": running, "Paused": c.state == "paused", "Restarting": False,
                 "OOMKilled": False, "Dead": False, "Pid": 4242 if running else 0,
                 "ExitCode": c.exit_code, "Error": "",
                 "StartedAt": c.started_at or "0001-01-01T00:00:00Z",
@@ -312,3 +316,140 @@ class Store:
                 raise NotFound(eid)
             return {"ID": e.id, "ContainerID": e.container_id, "Running": e.running,
                     "ExitCode": e.exit_code, "ProcessConfig": {"entrypoint": (e.command[0] if e.command else ""), "arguments": e.command[1:] if e.command else []}}
+
+    # --------------------------------------------- container lifecycle (extended)
+    def rename_container(self, ref: str, new_name: str) -> None:
+        with session_scope(self.maker) as s:
+            c = self._get_container(s, ref)
+            c.name = new_name.lstrip("/")
+            self._emit(s, "container", "rename", c.id, {"name": c.name})
+
+    def restart_container(self, ref: str) -> None:
+        iso, _, _ = _now()
+        with session_scope(self.maker) as s:
+            c = self._get_container(s, ref)
+            c.state, c.started_at = "running", iso
+            self._emit(s, "container", "restart", c.id, {"image": c.image, "name": c.name})
+
+    def pause_container(self, ref: str) -> None:
+        with session_scope(self.maker) as s:
+            c = self._get_container(s, ref)
+            if c.state != "running":
+                raise Conflict(f"container {c.name} is not running")
+            c.state = "paused"
+            self._emit(s, "container", "pause", c.id, {"name": c.name})
+
+    def unpause_container(self, ref: str) -> None:
+        with session_scope(self.maker) as s:
+            c = self._get_container(s, ref)
+            c.state = "running"
+            self._emit(s, "container", "unpause", c.id, {"name": c.name})
+
+    def kill_container(self, ref: str) -> None:
+        iso, _, _ = _now()
+        with session_scope(self.maker) as s:
+            c = self._get_container(s, ref)
+            c.state, c.exit_code, c.finished_at = "exited", 137, iso
+            self._emit(s, "container", "kill", c.id, {"name": c.name, "signal": "9"})
+            self._emit(s, "container", "die", c.id, {"name": c.name, "exitCode": "137"})
+
+    def prune_containers(self) -> dict[str, Any]:
+        removed = []
+        with session_scope(self.maker) as s:
+            for c in list(s.scalars(select(models.Container).filter_by(state="exited"))):
+                removed.append(c.id)
+                s.delete(c)
+        return {"ContainersDeleted": removed, "SpaceReclaimed": 0}
+
+    def container_stats(self, ref: str) -> dict[str, Any]:
+        # One-shot, non-streaming stats snapshot in the Docker shape.
+        with session_scope(self.maker) as s:
+            c = self._get_container(s, ref)
+            return {"id": c.id, "name": "/" + c.name, "read": _now()[0],
+                    "cpu_stats": {"cpu_usage": {"total_usage": 1000000}, "system_cpu_usage": 100000000, "online_cpus": 4},
+                    "precpu_stats": {"cpu_usage": {"total_usage": 900000}, "system_cpu_usage": 99000000},
+                    "memory_stats": {"usage": 8388608, "limit": 4113104896},
+                    "networks": {"eth0": {"rx_bytes": 1024, "tx_bytes": 2048}}}
+
+    # ---------------------------------------------------------- images (extended)
+    def inspect_image(self, ref: str) -> dict[str, Any]:
+        with session_scope(self.maker) as s:
+            img = self._find_image(s, ref)
+            if not img:
+                raise NotFound(ref)
+            return {"Id": img.id, "RepoTags": img.repo_tags or [], "RepoDigests": img.repo_digests or [],
+                    "Created": img.created, "Size": img.size, "Config": img.config or {},
+                    "Architecture": "arm64", "Os": "linux", "GraphDriver": {"Name": "overlay"}}
+
+    def image_history(self, ref: str) -> list[dict[str, Any]]:
+        with session_scope(self.maker) as s:
+            img = self._find_image(s, ref)
+            if not img:
+                raise NotFound(ref)
+            _, created, _ = _now()
+            return [{"Id": img.id, "Created": created, "CreatedBy": "/bin/sh -c #(nop) CMD", "Size": img.size, "Tags": img.repo_tags or [], "Comment": ""}]
+
+    def tag_image(self, ref: str, repo: str, tag: str) -> None:
+        with session_scope(self.maker) as s:
+            img = self._find_image(s, ref)
+            if not img:
+                raise NotFound(ref)
+            new_tag = f"{_normalize_image_ref(repo)}:{tag or 'latest'}"
+            tags = list(img.repo_tags or [])
+            if new_tag not in tags:
+                tags.append(new_tag)
+            img.repo_tags = tags
+
+    def remove_image(self, ref: str) -> list[dict[str, str]]:
+        with session_scope(self.maker) as s:
+            img = self._find_image(s, ref)
+            if not img:
+                raise NotFound(ref)
+            iid = img.id
+            s.delete(img)
+            self._emit(s, "image", "delete", iid, {})
+            return [{"Untagged": ref}, {"Deleted": iid}]
+
+    def prune_images(self) -> dict[str, Any]:
+        return {"ImagesDeleted": [], "SpaceReclaimed": 0}
+
+    def _find_image(self, s: Session, ref: str) -> models.Image | None:
+        img = s.get(models.Image, ref)
+        if img:
+            return img
+        want = ref if ":" in ref.rsplit("/", 1)[-1] else ref + ":latest"
+        want_norm = _normalize_image_ref(want.rsplit(":", 1)[0]) + ":" + want.rsplit(":", 1)[1]
+        for i in s.scalars(select(models.Image)):
+            tags = i.repo_tags or []
+            if ref in tags or want in tags or want_norm in tags:
+                return i
+        return None
+
+    # -------------------------------------------------------- volumes (extended)
+    def prune_volumes(self) -> dict[str, Any]:
+        return {"VolumesDeleted": [], "SpaceReclaimed": 0}
+
+    # ------------------------------------------------------- networks (extended)
+    def connect_network(self, ref: str, container_ref: str) -> None:
+        with session_scope(self.maker) as s:
+            if not (s.get(models.Network, ref) or s.scalars(select(models.Network).filter_by(name=ref)).first()):
+                raise NotFound(ref)
+            self._emit(s, "network", "connect", ref, {"container": container_ref})
+
+    def disconnect_network(self, ref: str, container_ref: str) -> None:
+        with session_scope(self.maker) as s:
+            if not (s.get(models.Network, ref) or s.scalars(select(models.Network).filter_by(name=ref)).first()):
+                raise NotFound(ref)
+            self._emit(s, "network", "disconnect", ref, {"container": container_ref})
+
+    def prune_networks(self) -> dict[str, Any]:
+        return {"NetworksDeleted": []}
+
+    # ------------------------------------------------------------ exec (extended)
+    def start_exec(self, eid: str) -> None:
+        with session_scope(self.maker) as s:
+            e = s.get(models.ExecInstance, eid)
+            if not e:
+                raise NotFound(eid)
+            e.running = False
+            e.exit_code = 0
