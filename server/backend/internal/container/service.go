@@ -682,6 +682,15 @@ func (s *ContainerService) recreateContainerInternal(ctx context.Context, docker
 		newConfig.Hostname = ""
 	}
 
+	// Engine-aware HostConfig sanitize on the recreate/edit path (see CreateContainer).
+	if s.dockerService != nil && newHostConfig != nil {
+		if engineInfo, engErr := s.dockerService.EngineInfo(ctx); engErr == nil {
+			if libarcane.SanitizeHostConfigForEngine(newHostConfig, engineInfo) {
+				slog.InfoContext(ctx, "sanitized HostConfig for engine", "engine", engineInfo.Name, "container", newName)
+			}
+		}
+	}
+
 	defer s.eventService.BeginDockerResourceSuppressionWindow("container", "", newName)()
 	createResp, err := libarcane.ContainerCreateWithCompatibilityForAPIVersion(ctx, dockerClient, client.ContainerCreateOptions{
 		Config:           newConfig,
@@ -1291,6 +1300,16 @@ func (s *ContainerService) CreateContainer(ctx context.Context, config *containe
 		if streamErr != nil {
 			s.eventService.LogErrorEvent(ctx, event.EventTypeContainerError, "container", "", containerName, user.ID, user.Username, "0", streamErr, database.JSON{"action": "create", "image": config.Image, "step": "complete_pull"})
 			return nil, errors.WrapIf(streamErr, "failed to complete image pull")
+		}
+	}
+
+	// Drop/coerce HostConfig fields the engine rejects (e.g. MemorySwappiness on
+	// Podman + cgroup v2). Uses the cached engine identity — no extra round-trip.
+	if s.dockerService != nil && hostConfig != nil {
+		if engineInfo, engErr := s.dockerService.EngineInfo(ctx); engErr == nil {
+			if libarcane.SanitizeHostConfigForEngine(hostConfig, engineInfo) {
+				slog.InfoContext(ctx, "sanitized HostConfig for engine", "engine", engineInfo.Name, "container", containerName)
+			}
 		}
 	}
 

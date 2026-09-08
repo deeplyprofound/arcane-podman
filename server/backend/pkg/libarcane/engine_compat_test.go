@@ -193,3 +193,23 @@ func TestDetectEngineInfo_NilClient(t *testing.T) {
 	require.Empty(t, info.Name)
 	require.False(t, info.IsPodman())
 }
+
+func TestSanitizeHostConfigForEngine(t *testing.T) {
+	swap := int64(60)
+	mk := func() *containertypes.HostConfig { return &containertypes.HostConfig{MemorySwappiness: &swap} }
+	podmanV2 := EngineCompatibilityInfo{Name: "podman", CgroupVersion: "2"}
+	podmanV1 := EngineCompatibilityInfo{Name: "podman", CgroupVersion: "1"}
+	docker := EngineCompatibilityInfo{Name: "docker", CgroupVersion: "2"}
+
+	hc := mk()
+	require.True(t, SanitizeHostConfigForEngine(hc, podmanV2), "podman+cgroupv2 should sanitize")
+	require.Nil(t, hc.MemorySwappiness, "MemorySwappiness dropped on podman cgroup v2")
+
+	hc = mk()
+	require.False(t, SanitizeHostConfigForEngine(hc, docker), "docker keeps MemorySwappiness")
+	require.NotNil(t, hc.MemorySwappiness)
+
+	hc = mk()
+	require.False(t, SanitizeHostConfigForEngine(hc, podmanV1), "podman cgroup v1 keeps it")
+	require.NotNil(t, hc.MemorySwappiness)
+}

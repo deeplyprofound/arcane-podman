@@ -49,8 +49,8 @@ network, messaging) off it. Nearly every finding below hangs off this.
 | B6 | Copacetic patch | **blocker** | `BkAddr:"docker://"` BuildKit; unavailable on Podman |
 | B7 | Short-name pulls | **blocker** | no implicit `docker.io`; headless enforcing fails; ships bare `alpine:latest` |
 | D1 | Daemonless UX | degraded | socket off by default; connect errors say "Docker" |
-| D2 | Default network | degraded | `IsDefaultNetwork` misses Podman's `podman` net → mislabels prune/unused |
-| D3 | Restore net DNS | degraded | `rusticRestoreNetworkModeInternal` picks DNS-less `podman` default |
+| ~~D2~~ | Default network | **moot (gated)** | Compat API aliases the default net to `bridge` (NOT `podman`) — `IsDefaultNetwork` already matches. Book-based finding; disproved by the sim/live gate. |
+| ~~D3~~ | Restore net DNS | **moot (gated)** | Same: the default comes back as `bridge`, which `rusticRestoreNetworkModeInternal` already excludes. |
 | D4 | Rootless ports | degraded | `<1024` publish fails; no inbound w/o forward — raw error |
 | D5 | Restart policy | degraded | `unless-stopped`≡`always`; no reboot-persist w/o `podman-restart.service` |
 | D6 | Healthchecks | degraded | systemd-timer driven; rootless needs lingering; `StartInterval` ignored |
@@ -161,16 +161,18 @@ the `registries.conf` requirement.
   emit Podman guidance (`systemctl --user enable --now podman.socket` rootless /
   `sudo systemctl enable --now podman.socket` rootful) and keep retry/backoff
   (`docker/service.go:242-276`); don't treat one dropped connection as fatal.
-- **D2 Default network** — Podman's default net is **`podman`** (netavark),
-  subnet `10.88.0.0/16` (`DevOps:15013,15454`), not `bridge`.
-  `dockerutil.IsDefaultNetwork` (`network_utils.go:17-24`) only knows Docker's
-  set → the `podman` net is counted "unused"/prune-eligible
-  (`network/service.go:408,470-513`). Make the default-name runtime-detected.
-- **D3 Restore net DNS** — only user-created nets get aardvark DNS; the default
-  has none (`DevOps:15781,15969-15975`). `rusticRestoreNetworkModeInternal`
-  (`systembackup/service.go:1423-1433`) excludes only `bridge`/`none`, so it
-  returns `podman` (DNS-less) → network-local S3 resolution fails. Exclude
-  `podman` too, or select by DNS-enabled.
+- **D2 Default network — MOOT over the compat API (gated).** The books
+  (`DevOps:15013,15454`) say the default netavark net is named `podman`, but
+  that's the **libpod** view. Over the **Docker-compat** `/networks` endpoint
+  arcane actually uses, Podman aliases it to **`bridge`** (verified live, Podman
+  6.1.1, and in the simulator). `dockerutil.IsDefaultNetwork` already matches
+  `bridge`, so there's nothing to fix. Guarded by
+  `pkg/dockerutil/network_integration_test.go` — if a future Podman stops
+  aliasing, the gate fails and we revisit. No code change.
+- **D3 Restore net DNS — MOOT (same reason).** The default returns as `bridge`,
+  which `rusticRestoreNetworkModeInternal` (`systembackup/service.go:1423-1433`)
+  already excludes. No code change. (This is the value of a real gate: two
+  book-based "blockers" dissolved on contact with the actual compat API.)
 - **D4 Rootless ports** — rootless can't publish `<1024` and has no inbound
   without forwarding (slirp4netns/pasta) (`DevOps:16437-16439,16302-16319`).
   `container/service.go` passes `PortBindings` raw → unhelpful error. Detect and

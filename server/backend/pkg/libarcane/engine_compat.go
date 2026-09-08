@@ -57,6 +57,15 @@ func (e EngineCompatibilityInfo) IsPodman() bool {
 	return strings.EqualFold(strings.TrimSpace(e.Name), "podman")
 }
 
+// SanitizeHostConfigForEngine removes/coerces HostConfig fields the detected
+// engine rejects or ignores, mutating hostConfig in place and reporting whether
+// anything changed. Today: drops MemorySwappiness on Podman + cgroup v2 (which
+// rejects it). Callers pass the CACHED engine identity so this stays a pure,
+// round-trip-free coercion on the container create/recreate/edit paths.
+func SanitizeHostConfigForEngine(hostConfig *containertypes.HostConfig, engineInfo EngineCompatibilityInfo) bool {
+	return sanitizeRecreateHostConfigInternal(hostConfig, engineInfo)
+}
+
 // EngineCompatibilityFrom derives the engine identity from an already-fetched
 // ServerVersion + Info, without any additional daemon round-trip. Use this when
 // the caller already holds both (e.g. the system-info handler).
