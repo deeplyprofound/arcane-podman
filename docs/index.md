@@ -10,6 +10,7 @@ first-class Podman support.
 - [SECURITY](SECURITY.md) — reporting vulnerabilities
 - [AI_POLICY](AI_POLICY.md) — policy for AI-assisted contributions
 - [UPSTREAM](UPSTREAM.md) — tracking upstream after the hard-fork (cherry-pick guide + path map)
+- [Podman drift audit](podman/drift-audit.md) — Docker→Podman gaps (blockers → opportunities), doc-grounded
 - [CHANGELOG](CHANGELOG.md) — release history
 - [LICENSE](LICENSE) — BSD-3-Clause
 
