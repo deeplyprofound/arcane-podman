@@ -46,7 +46,25 @@ Or via just (from repo root):
 ```sh
 just sim podman              # boot the simulator
 just test-sim podman         # boot it + run the Go engine gates against it, then tear down
+just sim-test                # the simulator's OWN pytest suite (in-process, <1s)
+just sim-drift               # print the encoded Docker<->Podman drift matrix
 ```
+
+## Gates
+
+- **`just sim-test`** — the simulator's pytest suite (`tests/test_sim.py`,
+  in-process FastAPI TestClient, no socket/VM, runs in <1s). Covers the full
+  container lifecycle and every encoded drift on both profiles (engine identity,
+  B2 MemorySwappiness, B4 swarm 404/503, B5/B6 session 404/200, D2 default net,
+  D7 df shape, image pull qualification, volume/network CRUD, events).
+- **`just test-sim [podman|docker]`** — arcane's Go `-tags integration` gates
+  pointed at the simulator (engine detection, socket ownership, default network,
+  short-name resolution, disk-usage shape).
+- **`just test-podman`** — the same Go gates against a live rootless
+  `podman machine` (ground-truth cross-check).
+
+The `engine_sim/drift.py` registry is the single source of encoded drifts;
+`just sim-drift` prints it. Add an entry there when a new drift is modeled.
 
 ## Regenerate fixtures from a real engine
 

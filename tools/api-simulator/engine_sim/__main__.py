@@ -5,7 +5,18 @@ import os
 
 import uvicorn
 
+from . import drift as drift_mod
 from .api import build_app
+
+
+def _print_drift_report() -> None:
+    print("Docker ↔ Podman drifts encoded by the simulator "
+          f"({len(drift_mod.REGISTRY)}):\n")
+    for d in drift_mod.REGISTRY:
+        print(f"[{d.id}]  ({d.area})  {d.summary}")
+        print(f"    docker : {d.docker}")
+        print(f"    podman : {d.podman}")
+        print(f"    source : {d.citation}\n")
 
 
 def main() -> None:
@@ -14,7 +25,12 @@ def main() -> None:
     ap.add_argument("--socket", default=os.environ.get("SIM_SOCKET", "/tmp/arcane-sim.sock"), help="unix socket to listen on")
     ap.add_argument("--port", type=int, default=0, help="listen on TCP port instead of a unix socket when > 0")
     ap.add_argument("--db", default=os.environ.get("SIM_DB", "sqlite+pysqlite:///:memory:"), help="SQLAlchemy state DB url")
+    ap.add_argument("--drift-report", action="store_true", help="print the encoded Docker<->Podman drift matrix and exit")
     args = ap.parse_args()
+
+    if args.drift_report:
+        _print_drift_report()
+        return
 
     app = build_app(args.profile, db_url=args.db)
     if args.port > 0:

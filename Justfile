@@ -234,6 +234,16 @@ test target="all":
 sim profile="podman" socket="/tmp/engine-sim.sock":
     cd tools/api-simulator && uv run python -m engine_sim --profile {{ profile }} --socket {{ socket }}
 
+# Run the simulator's own pytest suite (in-process, no socket/VM; <1s).
+[group('test')]
+sim-test:
+    cd tools/api-simulator && uv run pytest -q
+
+# Print the Docker<->Podman drift matrix the simulator encodes.
+[group('test')]
+sim-drift:
+    cd tools/api-simulator && uv run python -m engine_sim --drift-report
+
 # VM-free engine gates: boot the simulator (podman|docker), run the Go
 # integration tests against it, then tear it down. The primary Podman gate.
 [group('test')]
