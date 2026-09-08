@@ -1,3 +1,7 @@
+# base_path anchors the root-relative file globs below at the repo root
+# (Crowdin resolves them relative to this config file, now in .config/).
+base_path: ".."
+
 files:
   - source: /clients/webapp/svelte/messages/en.json
     translation: /%original_path%/%two_letters_code%.json

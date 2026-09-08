@@ -1164,7 +1164,7 @@ release *args:
 
         # Generate changelog
         echo "Generating changelog..."
-        git cliff $CLIFF_VERBOSE --github-token=$(gh auth token) --prepend docs/CHANGELOG.md --tag "v$NEW_VERSION" --unreleased
+        git cliff $CLIFF_VERBOSE --config .config/cliff.toml --github-token=$(gh auth token) --prepend docs/CHANGELOG.md --tag "v$NEW_VERSION" --unreleased
         git add docs/CHANGELOG.md
 
         # Commit the changes with the new version
@@ -1209,7 +1209,7 @@ release *args:
         echo "Would update .arcane.json to version $NEW_VERSION, revision $LATEST_REVISION, and buildTime $BUILD_TIME"
         echo "Would update clients/webapp/svelte/package.json to version $NEW_VERSION"
         echo "Generating changelog preview (no file write)..."
-        CHANGELOG=$(git cliff $CLIFF_VERBOSE --github-token=$(gh auth token) --tag "v$NEW_VERSION" --unreleased)
+        CHANGELOG=$(git cliff $CLIFF_VERBOSE --config .config/cliff.toml --github-token=$(gh auth token) --tag "v$NEW_VERSION" --unreleased)
 
         if [ -z "$CHANGELOG" ]; then
             echo "Error: Could not generate changelog preview for version $NEW_VERSION."
@@ -1260,7 +1260,7 @@ next-image-version mode="":
         BASE_VERSION="0.0.0"
     fi
 
-    CONTEXT=$($CLIFF_CMD --unreleased --context --offline --config cliff.toml)
+    CONTEXT=$($CLIFF_CMD --unreleased --context --offline --config .config/cliff.toml)
 
     BREAKING=$(jq '[.[].commits[]? | select(.breaking == true)] | length' <<<"$CONTEXT")
     FEATURES=$(jq '[.[].commits[]? | select((.group // "") | test("New features"))] | length' <<<"$CONTEXT")
@@ -1708,7 +1708,7 @@ _utils-hotfix:
     # Generate changelog for ONLY the fixes in this release branch
     echo -e "${BLUE}Generating changelog for hotfix...${NC}"
 
-    $CLIFF_CMD $CLIFF_VERBOSE \
+    $CLIFF_CMD $CLIFF_VERBOSE --config .config/cliff.toml \
         --github-token=$(gh auth token) \
         --prepend docs/CHANGELOG.md \
         --tag "$NEW_TAG" \
