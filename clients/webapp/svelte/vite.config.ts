@@ -43,7 +43,7 @@ export default defineConfig(({ command }) => ({
 		sveltekit({
 			preprocess: vitePreprocess(),
 			adapter: adapter({
-				pages: process.env['BUILD_PATH'] ?? '../backend/frontend/dist',
+				pages: process.env['BUILD_PATH'] ?? '../../../server/backend/frontend/dist',
 				fallback: 'index.html'
 			})
 		}),

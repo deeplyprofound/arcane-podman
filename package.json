@@ -2,7 +2,7 @@
 	"name": "arcane-repo",
 	"private": true,
 	"workspaces": [
-		"frontend",
+		"clients/webapp/svelte",
 		"tests",
 		"email-templates"
 	],

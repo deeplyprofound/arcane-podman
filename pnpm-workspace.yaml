@@ -1,5 +1,5 @@
 packages:
-  - frontend
+  - clients/webapp/svelte
   - tests
   - email-templates
 
