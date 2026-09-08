@@ -19,7 +19,7 @@ export default defineConfig({
 			'server/database/**',
 			'clients/cli/**',
 			'pipes/deployment/**',
-			'CHANGELOG.md',
+			'docs/CHANGELOG.md',
 			'docs/**',
 			'cliff.toml',
 			'depot.json',

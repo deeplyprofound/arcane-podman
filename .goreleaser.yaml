@@ -213,7 +213,7 @@ nfpms:
     contents:
       - src: ./clients/cli/README.md
         dst: '/usr/share/doc/{{ if eq (index .Env "BUILD_NEXT") "true" }}arcane-cli-next{{ else }}arcane-cli{{ end }}/README.md'
-      - src: ./LICENSE
+      - src: ./docs/LICENSE
         dst: '/usr/share/doc/{{ if eq (index .Env "BUILD_NEXT") "true" }}arcane-cli-next{{ else }}arcane-cli{{ end }}/LICENSE'
 
 publishers:

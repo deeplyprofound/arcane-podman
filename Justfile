@@ -1049,7 +1049,7 @@ release *args:
     fi
 
     # Check if the script is being run from the root of the project
-    if [ ! -f .arcane.json ] || [ ! -f clients/webapp/svelte/package.json ] || [ ! -f CHANGELOG.md ]; then
+    if [ ! -f .arcane.json ] || [ ! -f clients/webapp/svelte/package.json ] || [ ! -f docs/CHANGELOG.md ]; then
         echo "Error: This command must be run from the root of the project."
         exit 1
     fi
@@ -1164,8 +1164,8 @@ release *args:
 
         # Generate changelog
         echo "Generating changelog..."
-        git cliff $CLIFF_VERBOSE --github-token=$(gh auth token) --prepend CHANGELOG.md --tag "v$NEW_VERSION" --unreleased
-        git add CHANGELOG.md
+        git cliff $CLIFF_VERBOSE --github-token=$(gh auth token) --prepend docs/CHANGELOG.md --tag "v$NEW_VERSION" --unreleased
+        git add docs/CHANGELOG.md
 
         # Commit the changes with the new version
         git commit -m "release: $NEW_VERSION"
@@ -1184,7 +1184,7 @@ release *args:
 
         # Extract the changelog content for the latest release
         echo "Extracting changelog content for version $NEW_VERSION..."
-        CHANGELOG=$(awk '/^## v[0-9]/ { if (found) exit; found=1; next } found' CHANGELOG.md)
+        CHANGELOG=$(awk '/^## v[0-9]/ { if (found) exit; found=1; next } found' docs/CHANGELOG.md)
 
         if [ -z "$CHANGELOG" ]; then
             echo "Error: Could not extract changelog for version $NEW_VERSION."
@@ -1463,7 +1463,7 @@ _utils-hotfix:
     NC='\033[0m' # No Color
 
     # Check if the script is being run from the root of the project
-    if [ ! -f .arcane.json ] || [ ! -f clients/webapp/svelte/package.json ] || [ ! -f CHANGELOG.md ]; then
+    if [ ! -f .arcane.json ] || [ ! -f clients/webapp/svelte/package.json ] || [ ! -f docs/CHANGELOG.md ]; then
         echo -e "${RED}Error: This command must be run from the root of the project.${NC}"
         exit 1
     fi
@@ -1710,24 +1710,24 @@ _utils-hotfix:
 
     $CLIFF_CMD $CLIFF_VERBOSE \
         --github-token=$(gh auth token) \
-        --prepend CHANGELOG.md \
+        --prepend docs/CHANGELOG.md \
         --tag "$NEW_TAG" \
         --unreleased
 
-    git add CHANGELOG.md
+    git add docs/CHANGELOG.md
 
     # Commit the version bump and changelog
     git commit \
         -m "release: ${NEW_VERSION} (hotfix)" \
         -m "Hotfix release containing critical bug fixes." \
         -m "Base version: ${BASE_TAG}" \
-        -m "See CHANGELOG.md for details."
+        -m "See docs/CHANGELOG.md for details."
 
     # Create annotated tag
     git tag -a "$NEW_TAG" \
         -m "Release ${NEW_TAG} (Hotfix)" \
         -m "Hotfix release based on ${BASE_TAG}" \
-        -m "See CHANGELOG.md for details."
+        -m "See docs/CHANGELOG.md for details."
 
     git tag "cli/${NEW_TAG}"
     git tag "types/${NEW_TAG}"
@@ -1744,7 +1744,7 @@ _utils-hotfix:
 
     # Extract the changelog content for the latest release
     echo "Extracting changelog content for version $NEW_TAG..."
-    CHANGELOG=$(awk '/^## v[0-9]/ { if (found) exit; found=1; next } found' CHANGELOG.md)
+    CHANGELOG=$(awk '/^## v[0-9]/ { if (found) exit; found=1; next } found' docs/CHANGELOG.md)
 
     if [ -z "$CHANGELOG" ]; then
         echo -e "${RED}Error: Could not extract changelog for version $NEW_TAG.${NC}"
@@ -1782,11 +1782,11 @@ _utils-hotfix:
     # Update version in clients/webapp/svelte/package.json
     jq --arg new_version "$NEW_VERSION" '.version = $new_version' clients/webapp/svelte/package.json > clients/webapp/svelte/package_tmp.json && mv clients/webapp/svelte/package_tmp.json clients/webapp/svelte/package.json
 
-    # Copy the updated CHANGELOG.md from the release branch
-    git checkout "${RELEASE_BRANCH}" -- CHANGELOG.md
+    # Copy the updated docs/CHANGELOG.md from the release branch
+    git checkout "${RELEASE_BRANCH}" -- docs/CHANGELOG.md
 
     # Commit the version updates to main
-    git add .arcane.json clients/webapp/svelte/package.json CHANGELOG.md
+    git add .arcane.json clients/webapp/svelte/package.json docs/CHANGELOG.md
     git commit -m "chore: bump version to ${NEW_VERSION} after hotfix release"
     git push origin main
 
