@@ -394,7 +394,8 @@ func createProjectVolumeCopyHolderContainerInternal(ctx context.Context, dockerC
 		Labels:          volumehelper.Labels(),
 	}
 
-	hostConfig := volumehelper.HostConfig(copyRuntime.Image, []string{bind}, nil)
+	engineInfo, _ := libarcane.DetectEngineInfo(ctx, dockerClient)
+	hostConfig := volumehelper.HostConfig(copyRuntime.Image, []string{bind}, nil, engineInfo)
 	hostConfig.AutoRemove = false
 
 	resp, err := dockerClient.ContainerCreate(ctx, client.ContainerCreateOptions{

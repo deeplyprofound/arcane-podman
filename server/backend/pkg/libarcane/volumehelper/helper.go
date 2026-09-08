@@ -50,7 +50,37 @@ func RemoveOptions() client.ContainerRemoveOptions {
 }
 
 // HostConfig builds the host config shared by volume helper containers.
-func HostConfig(helperImage string, binds []string, mounts []mount.Mount) *container.HostConfig {
+//
+// engineInfo drives SELinux handling: on Podman + SELinux-enforcing hosts, a
+// host-path bind mount is denied unless relabeled with :z. The Docker Mounts
+// API has no relabel field, so any host-path bind is converted to a
+// HostConfig.Binds string with :z (verified over the compat API on Fedora
+// CoreOS: Binds ":z" reads; the Mounts API is denied). Named-volume mounts and
+// non-Podman/non-SELinux engines are left as-is (unchanged Docker behavior).
+func HostConfig(helperImage string, binds []string, mounts []mount.Mount, engineInfo libarcane.EngineCompatibilityInfo) *container.HostConfig {
+	// Relabel any host-path bind STRINGS (no-op for named volumes / non-selinux).
+	for i, b := range binds {
+		binds[i] = libarcane.RelabelBindForEngine(b, engineInfo)
+	}
+
+	if engineInfo.IsPodman() && engineInfo.SELinuxEnabled {
+		kept := mounts[:0:0]
+		for _, m := range mounts {
+			if m.Type == mount.TypeBind && strings.HasPrefix(m.Source, "/") {
+				bind := m.Source + ":" + m.Target
+				if m.ReadOnly {
+					bind += ":ro,z"
+				} else {
+					bind += ":z"
+				}
+				binds = append(binds, bind)
+				continue
+			}
+			kept = append(kept, m)
+		}
+		mounts = kept
+	}
+
 	hostConfig := &container.HostConfig{
 		Binds:      binds,
 		Mounts:     mounts,

@@ -43,7 +43,7 @@ network, messaging) off it. Nearly every finding below hangs off this.
 |---|------|----------|----------|
 | B1 | Rootless identity | **blocker** | socket-GID group + forced UID 65532 re-exec break rootless socket access |
 | B2 | cgroup-v2 sanitize | **blocker** | `PrepareRecreateHostConfigForEngine` not wired into recreate/create/edit |
-| B3 | SELinux relabel | **partial** | capability (SELinuxEnabled/Rootless) + `RelabelBindForEngine` helper landed & gated; the backup host-path `mount.Mount` → `:z` conversion needs the SELinux-enforcing VM to verify (B3b) |
+| B3 | SELinux relabel | **fixed ✓** | `volumehelper.HostConfig` is engine-aware: on Podman+SELinux it relabels host-path bind strings (`:z`) and converts host-path `mount.Mount`→`:z` Binds string (the Mounts API has no relabel field). All 7 helper/backup/rustic/rename call sites wired. Verified on the enforcing Fedora CoreOS VM (below). |
 | B4 | Swarm reachable | **blocker** | `/swarm/cluster` + `SwarmInit/Join/Leave/Unlock` ungated → raw errors |
 | B5 | BuildKit builds | **blocker** | build path dials `/grpc`+`/session`; Podman has neither |
 | B6 | Copacetic patch | **blocker** | `BkAddr:"docker://"` BuildKit; unavailable on Podman |
@@ -250,3 +250,19 @@ render fine.
 5. **Registry**: B7 (short-name), D9/D10.
 6. **Podman-native**: quadlet generator, auto-update, pods/kube, secrets.
 </content>
+
+## Appendix: SELinux relabel — verified on the enforcing VM (B3)
+
+Probed on the rootless Fedora CoreOS `podman machine` (SELinux Enforcing), over
+the same Docker-compat API arcane uses:
+
+```
+host file label:              unconfined_u:object_r:user_home_t:s0
+HostConfig.Binds ":z"      -> reads the file; label relabeled to container_file_t
+HostConfig.Mounts (bind)   -> "Permission denied" (Mounts API has no relabel field)
+podman run -v src:/data:ro -> Permission denied
+podman run -v src:/data:ro,z -> reads the file
+```
+
+Conclusion: relabel must be expressed as a `Binds` string with `:z` (not via the
+Mounts API). That is what `HostConfig` now does on Podman+SELinux.

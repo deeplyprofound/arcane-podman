@@ -1330,7 +1330,7 @@ func (s *VolumeService) createBackupTempContainerWithMountInternal(ctx context.C
 		Labels:          volumehelper.Labels(),
 	}
 
-	hostConfig := volumehelper.HostConfig(helperImage, nil, []mount.Mount{backupMount})
+	hostConfig := volumehelper.HostConfig(helperImage, nil, []mount.Mount{backupMount}, s.engineInfoForHostConfig(ctx))
 
 	resp, err := dockerClient.ContainerCreate(ctx, client.ContainerCreateOptions{
 		Config:     config,
@@ -1435,7 +1435,7 @@ func (s *VolumeService) restoreArchiveBackupInternal(ctx context.Context, docker
 	}
 	hostConfig := volumehelper.HostConfig(helperImage, []string{
 		volumeName + ":/volume",
-	}, []mount.Mount{backupStorage.mount})
+	}, []mount.Mount{backupStorage.mount}, s.engineInfoForHostConfig(ctx))
 	resp, err := dockerClient.ContainerCreate(ctx, client.ContainerCreateOptions{
 		Config:     config,
 		HostConfig: hostConfig,
@@ -1562,7 +1562,7 @@ func (s *VolumeService) restoreArchiveBackupFilesInternal(ctx context.Context, d
 	}
 	hostConfig := volumehelper.HostConfig(helperImage, []string{
 		volumeName + ":/volume",
-	}, []mount.Mount{backupStorage.mount})
+	}, []mount.Mount{backupStorage.mount}, s.engineInfoForHostConfig(ctx))
 	resp, err := dockerClient.ContainerCreate(ctx, client.ContainerCreateOptions{
 		Config:     config,
 		HostConfig: hostConfig,

@@ -248,6 +248,17 @@ func (s *VolumeService) acquireHelperInternal(volumeName, containerID string) (f
 // startHelperContainerInternal creates and starts a volume helper container and
 // returns a cleanup that removes it. Tracking of reusable helpers is
 // the caller's responsibility.
+// engineInfoForHostConfig returns the cached engine identity used for volume
+// helper HostConfig decisions (SELinux relabel of host binds). Best-effort: a
+// zero value (Docker-like) on error, so non-Podman/non-SELinux is unaffected.
+func (s *VolumeService) engineInfoForHostConfig(ctx context.Context) libarcane.EngineCompatibilityInfo {
+	if s.dockerService == nil {
+		return libarcane.EngineCompatibilityInfo{}
+	}
+	info, _ := s.dockerService.EngineInfo(ctx)
+	return info
+}
+
 func (s *VolumeService) startHelperContainerInternal(ctx context.Context, dockerClient *client.Client, volumeName string) (string, func(), error) {
 	helperImage, err := s.getVolumeHelperImageInternal(ctx, dockerClient)
 	if err != nil {
@@ -261,7 +272,7 @@ func (s *VolumeService) startHelperContainerInternal(ctx context.Context, docker
 		Labels:          volumehelper.Labels(),
 	}
 
-	hostConfig := volumehelper.HostConfig(helperImage, []string{volumeName + ":/volume"}, nil)
+	hostConfig := volumehelper.HostConfig(helperImage, []string{volumeName + ":/volume"}, nil, s.engineInfoForHostConfig(ctx))
 
 	resp, err := dockerClient.ContainerCreate(ctx, client.ContainerCreateOptions{
 		Config:     config,

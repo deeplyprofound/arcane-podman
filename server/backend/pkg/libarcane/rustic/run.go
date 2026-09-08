@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/getarcaneapp/arcane/backend/v2/pkg/libarcane"
 	"github.com/getarcaneapp/arcane/backend/v2/pkg/libarcane/volumehelper"
 	"github.com/moby/moby/api/pkg/stdcopy"
 	"github.com/moby/moby/api/types/container"
@@ -32,7 +33,8 @@ func Run(ctx context.Context, dockerClient *client.Client, password string, comm
 	)
 	allMounts := append([]mount.Mount{}, mounts...)
 	allMounts = append(allMounts, mount.Mount{Type: mount.TypeVolume, Source: CacheVolume, Target: "/cache"})
-	hostConfig := volumehelper.HostConfig(DefaultImage, nil, allMounts)
+	engineInfo, _ := libarcane.DetectEngineInfo(ctx, dockerClient)
+	hostConfig := volumehelper.HostConfig(DefaultImage, nil, allMounts, engineInfo)
 	hostConfig.AutoRemove = false
 	hostConfig.NetworkMode = networkMode
 	created, err := dockerClient.ContainerCreate(ctx, client.ContainerCreateOptions{

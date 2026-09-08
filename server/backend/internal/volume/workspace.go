@@ -1021,7 +1021,7 @@ func (s *VolumeService) createVolumeWorkspaceMutationContainerInternal(ctx conte
 		return "", nil, err
 	}
 	config := &container.Config{Image: helperImage, Cmd: []string{"sleep", "infinity"}, NetworkDisabled: true, Labels: volumehelper.Labels()}
-	hostConfig := volumehelper.HostConfig(helperImage, []string{volumeName + ":/volume"}, []mount.Mount{backupStorage.mount})
+	hostConfig := volumehelper.HostConfig(helperImage, []string{volumeName + ":/volume"}, []mount.Mount{backupStorage.mount}, s.engineInfoForHostConfig(ctx))
 	resp, err := dockerClient.ContainerCreate(ctx, client.ContainerCreateOptions{Config: config, HostConfig: hostConfig})
 	if err != nil {
 		return "", nil, errors.WrapIf(err, "create volume workspace helper")
