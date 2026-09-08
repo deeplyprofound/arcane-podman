@@ -65,7 +65,7 @@ inspections/**
 .deepsec/
 
 # Vite+ generated git hook dispatcher
-.vite-hooks/_
+.config/vite-hooks/_
 
 # Transient OpenAPI spec emitted by `just typegen`
 clients/webapp/svelte/openapi.json

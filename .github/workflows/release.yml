@@ -104,7 +104,7 @@ jobs:
         with:
           distribution: goreleaser-pro
           version: "~> v2"
-          args: release --clean --skip=validate
+          args: release --clean --skip=validate --config .config/goreleaser.yaml
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}

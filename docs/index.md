@@ -28,3 +28,12 @@ scripts/   dev/utility scripts
 - `just typegen` — regenerate `clients/webapp/svelte/src/lib/types/api.ts` from the backend's OpenAPI spec
 - `just db-new <name>` / `just db-status` — author/inspect paired sqlite+postgres migrations
 - See the root `Justfile` (`just --list`) for the full recipe set.
+
+## One-time setup
+
+Git hooks live in `.config/vite-hooks/` (moved from the vp default `.vite-hooks`).
+Point vp/git at them once per clone:
+
+```sh
+vp config --hooks-dir .config/vite-hooks   # sets core.hooksPath; vp won't override a custom path
+```
