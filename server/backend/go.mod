@@ -6,7 +6,7 @@ replace (
 	// Copacetic v0.14.2 only compiles against the buildx v0.32 imagetools API;
 	// drop this pin once copa supports buildx >= 0.35 and the dependency is bumped.
 	github.com/docker/buildx => github.com/docker/buildx v0.32.1
-	github.com/getarcaneapp/arcane/cli/v2 => ../cli
+	github.com/getarcaneapp/arcane/cli/v2 => ../../clients/cli
 	github.com/getarcaneapp/arcane/types/v2 => ../types
 )
 

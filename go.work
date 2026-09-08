@@ -1,7 +1,7 @@
 go 1.27
 
 use (
-	./backend
-	./cli
-	./types
+	./server/backend
+	./server/types
+	./clients/cli
 )
