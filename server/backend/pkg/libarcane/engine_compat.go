@@ -16,6 +16,12 @@ type EngineCompatibilityInfo struct {
 	Name string
 	// CgroupVersion is the daemon-reported cgroup version, such as "1" or "2".
 	CgroupVersion string
+	// SELinuxEnabled reports whether the host enforces SELinux (Info
+	// SecurityOptions contains "selinux"). Host binds then need :z/:Z relabeling.
+	SELinuxEnabled bool
+	// Rootless reports whether the engine runs rootless (Info SecurityOptions
+	// contains "rootless"). Drives runtime-identity + port/ownership behavior.
+	Rootless bool
 }
 
 // PrepareRecreateHostConfigForEngine clones hostConfig and removes recreate
@@ -120,10 +126,49 @@ func sanitizeRecreateHostConfigInternal(hostConfig *containertypes.HostConfig, e
 }
 
 func detectEngineCompatibilityInfoInternal(version client.ServerVersionResult, info systemtypes.Info) EngineCompatibilityInfo {
-	return EngineCompatibilityInfo{
-		Name:          detectEngineNameInternal(version, info),
-		CgroupVersion: strings.TrimSpace(info.CgroupVersion),
+	selinux, rootless := false, false
+	for _, opt := range info.SecurityOptions {
+		lo := strings.ToLower(opt)
+		if strings.Contains(lo, "selinux") {
+			selinux = true
+		}
+		if strings.Contains(lo, "rootless") {
+			rootless = true
+		}
 	}
+	return EngineCompatibilityInfo{
+		Name:           detectEngineNameInternal(version, info),
+		CgroupVersion:  strings.TrimSpace(info.CgroupVersion),
+		SELinuxEnabled: selinux,
+		Rootless:       rootless,
+	}
+}
+
+// RelabelBindForEngine appends the SELinux shared-relabel suffix (:z) to a
+// host-path bind ("src:dst[:mode]") when the engine is Podman on an SELinux
+// host — otherwise the container is denied access to the bind. Named-volume
+// binds (source is not an absolute path) and non-podman/non-selinux engines are
+// returned unchanged; ":z"/":Z" already present is preserved (idempotent).
+func RelabelBindForEngine(bind string, engineInfo EngineCompatibilityInfo) string {
+	if !engineInfo.IsPodman() || !engineInfo.SELinuxEnabled {
+		return bind
+	}
+	parts := strings.Split(bind, ":")
+	// Only host-path binds (absolute source) need relabeling; named volumes don't.
+	if len(parts) < 2 || !strings.HasPrefix(parts[0], "/") {
+		return bind
+	}
+	mode := ""
+	if len(parts) >= 3 {
+		mode = parts[2]
+	}
+	if strings.Contains(mode, "z") || strings.Contains(mode, "Z") {
+		return bind // already relabeled
+	}
+	if mode == "" {
+		return parts[0] + ":" + parts[1] + ":z"
+	}
+	return parts[0] + ":" + parts[1] + ":" + mode + ",z"
 }
 
 func detectEngineNameInternal(version client.ServerVersionResult, info systemtypes.Info) string {

@@ -332,9 +332,11 @@ func (h *SystemHandler) GetDockerInfo(ctx context.Context, input *GetDockerInfoI
 			BuildTime:  buildTime,
 			Info:       info,
 			Engine: dockerinfo.EngineIdentity{
-				Name:          engine.Name,
-				Podman:        engine.IsPodman(),
-				CgroupVersion: engine.CgroupVersion,
+				Name:           engine.Name,
+				Podman:         engine.IsPodman(),
+				CgroupVersion:  engine.CgroupVersion,
+				Rootless:       engine.Rootless,
+				SelinuxEnabled: engine.SELinuxEnabled,
 			},
 		},
 	}, nil

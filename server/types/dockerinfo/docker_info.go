@@ -24,6 +24,18 @@ type EngineIdentity struct {
 	//
 	// Required: true
 	CgroupVersion string `json:"cgroupVersion"`
+
+	// Rootless reports whether the engine runs rootless (user-owned socket,
+	// unprivileged ports, mapped ownership).
+	//
+	// Required: true
+	Rootless bool `json:"rootless"`
+
+	// SelinuxEnabled reports whether the host enforces SELinux, so host binds
+	// need :z/:Z relabeling.
+	//
+	// Required: true
+	SelinuxEnabled bool `json:"selinuxEnabled"`
 }
 
 type Info struct {

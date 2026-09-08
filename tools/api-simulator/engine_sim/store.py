@@ -258,6 +258,14 @@ class Store:
                 "Labels": c.labels or {}, "Mounts": c.mounts,
                 "NetworkSettings": c.network_settings}
 
+    def wait_container(self, ref: str) -> dict[str, Any]:
+        with session_scope(self.maker) as s:
+            c = self._get_container(s, ref)
+            return {"StatusCode": c.exit_code}
+
+    def buildkit(self) -> bool:
+        return self.profile.buildkit
+
     # -------------------------------------------------------------- exec
     def create_exec(self, ref: str, body: dict[str, Any]) -> dict[str, Any]:
         with session_scope(self.maker) as s:

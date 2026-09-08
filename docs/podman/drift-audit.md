@@ -43,7 +43,7 @@ network, messaging) off it. Nearly every finding below hangs off this.
 |---|------|----------|----------|
 | B1 | Rootless identity | **blocker** | socket-GID group + forced UID 65532 re-exec break rootless socket access |
 | B2 | cgroup-v2 sanitize | **blocker** | `PrepareRecreateHostConfigForEngine` not wired into recreate/create/edit |
-| B3 | SELinux relabel | **blocker** | helper/backup binds never get `:z`/`:Z` → silent runtime access-denied |
+| B3 | SELinux relabel | **partial** | capability (SELinuxEnabled/Rootless) + `RelabelBindForEngine` helper landed & gated; the backup host-path `mount.Mount` → `:z` conversion needs the SELinux-enforcing VM to verify (B3b) |
 | B4 | Swarm reachable | **blocker** | `/swarm/cluster` + `SwarmInit/Join/Leave/Unlock` ungated → raw errors |
 | B5 | BuildKit builds | **blocker** | build path dials `/grpc`+`/session`; Podman has neither |
 | B6 | Copacetic patch | **blocker** | `BkAddr:"docker://"` BuildKit; unavailable on Podman |

@@ -61,6 +61,8 @@ func TestIntegration_DetectEngineInfo(t *testing.T) {
 		require.Equal(t, "podman", info.Name)
 		require.True(t, info.IsPodman())
 		require.Equal(t, "2", info.CgroupVersion, "rootless Podman requires cgroups v2")
+		require.True(t, info.Rootless, "rootless Podman should report Rootless (SecurityOptions name=rootless)")
+		require.True(t, info.SELinuxEnabled, "Fedora/RHEL Podman is SELinux-enforcing (SecurityOptions name=selinux)")
 	}
 }
 

@@ -46,6 +46,14 @@ REGISTRY: list[Drift] = [
         citation="live capture; drift-audit B5/B6",
     ),
     Drift(
+        id="buildkit-session",
+        area="build",
+        summary="BuildKit /session + /grpc endpoints (B5/B6)",
+        docker="serves /session (hijack) + /grpc for BuildKit builds + Copacetic patch",
+        podman="/session + /grpc -> 404 (buildah, no embedded BuildKit)",
+        citation="drift-audit B5/B6; empty Buildkit-Version header",
+    ),
+    Drift(
         id="cgroup-hostconfig",
         area="container",
         summary="cgroup-v2 rejects/ignores some HostConfig fields (B2)",

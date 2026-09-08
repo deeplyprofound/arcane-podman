@@ -193,6 +193,41 @@ def build_app(profile_name: str, db_url: str = "sqlite+pysqlite:///:memory:") ->
         except NotFound:
             return nf(eid)
 
+    # ---- containers: logs / wait ----
+    @app.get("/containers/{ref}/logs")
+    def container_logs(ref: str):
+        try:
+            store.inspect_container(ref)  # existence check
+        except NotFound:
+            return nf(ref)
+        return PlainTextResponse("sim: log line 1\nsim: log line 2\n")
+
+    @app.post("/containers/{ref}/wait")
+    def container_wait(ref: str):
+        try:
+            return JSONResponse(store.wait_container(ref))
+        except NotFound:
+            return nf(ref)
+
+    # ---- build (B5/B6 drift) ----
+    @app.post("/build")
+    def build():
+        # Both engines expose /build; Podman does a classic buildah build (no
+        # BuildKit). Return a classic NDJSON build stream.
+        return PlainTextResponse(
+            json.dumps({"stream": "Step 1/1 : FROM alpine\n"}) + "\n" + json.dumps({"stream": "Successfully built deadbeef\n"}) + "\n",
+            media_type="application/json",
+        )
+
+    @app.api_route("/session", methods=["POST", "GET"])
+    @app.api_route("/grpc", methods=["POST", "GET"])
+    def buildkit_session():
+        # BuildKit session/gRPC endpoints exist only on Docker's embedded
+        # BuildKit. Podman (buildah) does NOT serve them -> 404 (drift B5/B6).
+        if not store.buildkit():
+            return JSONResponse({"message": "BuildKit is not available on this engine"}, status_code=404)
+        return JSONResponse({"note": "buildkit session not fully modeled by the simulator"}, status_code=200)
+
     @app.get("/{full_path:path}")
     def catch_all(full_path: str):
         return JSONResponse({"message": f"engine-sim: unhandled /{full_path}"}, status_code=404)

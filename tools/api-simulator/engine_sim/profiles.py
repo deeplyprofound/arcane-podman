@@ -29,6 +29,7 @@ class Profile:
     strip_memory_swappiness: bool  # cgroup v2 drops it
     selinux_enforcing: bool
     rootless: bool
+    buildkit: bool  # docker embeds BuildKit (/session, /grpc); podman does not (buildah)
 
     def coerce_host_config(self, host_config: dict[str, Any]) -> dict[str, Any]:
         """Apply the engine's create-time HostConfig behavior (B2 drift)."""
@@ -93,6 +94,7 @@ def load(name: str) -> Profile:
             strip_memory_swappiness=str(info.get("CgroupVersion")) == "2",
             selinux_enforcing=any("selinux" in s for s in secopts),
             rootless=bool(info.get("Rootless")),
+            buildkit=False,
         )
     if name == "docker":
         return Profile(
@@ -106,5 +108,6 @@ def load(name: str) -> Profile:
             strip_memory_swappiness=False,  # docker honors it
             selinux_enforcing=False,
             rootless=False,
+            buildkit=True,
         )
     raise ValueError(f"unknown profile: {name}")

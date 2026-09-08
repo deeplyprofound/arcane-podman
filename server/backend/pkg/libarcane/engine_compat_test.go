@@ -213,3 +213,39 @@ func TestSanitizeHostConfigForEngine(t *testing.T) {
 	require.False(t, SanitizeHostConfigForEngine(hc, podmanV1), "podman cgroup v1 keeps it")
 	require.NotNil(t, hc.MemorySwappiness)
 }
+
+func TestDetectEngineInfo_SecurityOptions(t *testing.T) {
+	podman := EngineCompatibilityFrom(
+		client.ServerVersionResult{Platform: struct{ Name string }{Name: "Podman Engine"}},
+		systemtypes.Info{CgroupVersion: "2", SecurityOptions: []string{"name=seccomp,profile=default", "name=rootless", "name=selinux"}},
+	)
+	require.True(t, podman.IsPodman())
+	require.True(t, podman.Rootless, "rootless from SecurityOptions")
+	require.True(t, podman.SELinuxEnabled, "selinux from SecurityOptions")
+
+	docker := EngineCompatibilityFrom(
+		client.ServerVersionResult{Platform: struct{ Name string }{Name: "Docker Engine - Community"}},
+		systemtypes.Info{CgroupVersion: "2", SecurityOptions: []string{"name=seccomp,profile=builtin", "name=cgroupns"}},
+	)
+	require.False(t, docker.Rootless)
+	require.False(t, docker.SELinuxEnabled)
+}
+
+func TestRelabelBindForEngine(t *testing.T) {
+	podmanSel := EngineCompatibilityInfo{Name: "podman", SELinuxEnabled: true}
+	podmanNoSel := EngineCompatibilityInfo{Name: "podman", SELinuxEnabled: false}
+	docker := EngineCompatibilityInfo{Name: "docker", SELinuxEnabled: true}
+
+	// host-path bind on podman+selinux -> gets :z
+	require.Equal(t, "/srv/data:/data:z", RelabelBindForEngine("/srv/data:/data", podmanSel))
+	// preserves existing mode, adds ,z
+	require.Equal(t, "/srv/data:/data:ro,z", RelabelBindForEngine("/srv/data:/data:ro", podmanSel))
+	// idempotent
+	require.Equal(t, "/srv/data:/data:z", RelabelBindForEngine("/srv/data:/data:z", podmanSel))
+	// named volume (non-path source) untouched
+	require.Equal(t, "myvol:/data", RelabelBindForEngine("myvol:/data", podmanSel))
+	// podman without selinux untouched
+	require.Equal(t, "/srv/data:/data", RelabelBindForEngine("/srv/data:/data", podmanNoSel))
+	// docker untouched even if selinux flag set
+	require.Equal(t, "/srv/data:/data", RelabelBindForEngine("/srv/data:/data", docker))
+}
