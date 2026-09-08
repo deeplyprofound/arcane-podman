@@ -19,7 +19,7 @@ jobs:
     # off here. Re-enable with a fork-owned, image-only release to Quay
     # (quay.io/iguessipentest/arcane-podman). See patch/README.md.
     if: github.repository == 'getarcaneapp/arcane'
-    runs-on: depot-ubuntu-24.04-16
+    runs-on: ubuntu-latest
 
     env:
       MANAGER_IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/arcane

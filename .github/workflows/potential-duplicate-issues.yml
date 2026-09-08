@@ -5,7 +5,7 @@ on:
 
 jobs:
     run:
-        runs-on: depot-ubuntu-latest
+        runs-on: ubuntu-latest
         steps:
             - name: Request App Token
               id: app-token
