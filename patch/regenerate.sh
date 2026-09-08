@@ -24,5 +24,6 @@ gen() { # gen <output-file> <path...>
 echo "Regenerating patches against upstream/main @ $BASE_SHA"
 gen 0001-disable-release-workflow-on-fork.patch .github/workflows/release.yml
 gen 0002-devcontainer-identity.patch            .devcontainer/devcontainer.json
+gen 0003-podman-socket-autodetect.patch         backend/internal/config/config.go .env.example
 
 echo "Done. Remember to update the pinned base commit in patch/README.md if it changed ($BASE_SHA)."

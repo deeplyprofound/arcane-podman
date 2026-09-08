@@ -124,6 +124,7 @@ func Load() *Config {
 	cfg := &Config{}
 	loadFromEnv(cfg)
 	applyOptions(cfg)
+	applyContainerHostDefaults(cfg)
 	applyAgentModeDefaults(cfg)
 	applyProxyDefaults(cfg)
 	applyWorkspaceDefaults(cfg)

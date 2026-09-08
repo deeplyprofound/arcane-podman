@@ -34,6 +34,7 @@ benefit. Our identity lives in the *images we publish*, not the module path.
 |------|---------|------------|
 | `0001-disable-release-workflow-on-fork.patch` | `.github/workflows/release.yml` | Gates the `release` job on `github.repository == 'getarcaneapp/arcane'` so it never runs on the fork. The fork has no goreleaser-pro key / cosign / macOS notary / Depot, and the upstream job also mints a `getarcaneapp` GitHub App token that would hard-fail here. |
 | `0002-devcontainer-identity.patch` | `.devcontainer/devcontainer.json` | Renames the dev container to "Arcane-Podman Dev Container" and sets `TZ` to `America/New_York`. |
+| `0003-podman-socket-autodetect.patch` | `backend/internal/config/config.go`, `.env.example` | Adds one `applyContainerHostDefaults(cfg)` call in `config.Load()` (+ `.env.example` docs) so an unset `DOCKER_HOST` auto-detects a Podman socket. The bulk of the feature lives in **new** files (`backend/pkg/libarcane/enginesocket/`, `backend/internal/config/containerhost.go`) that upstream never touches, so they carry via git history, not this patch. Upstreamable. |
 
 ### Deferred (not yet written)
 
