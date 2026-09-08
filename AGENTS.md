@@ -21,8 +21,8 @@ headless agent modes, and a Cobra CLI.
 - Never run state-changing Git commands. Do not stage, commit, push, tag, stash,
   create branches, or create worktrees.
 - Name every unexported Go function with an `Internal` suffix.
-- Put public/shared Go types in the top-level `types/` module.
-- Put reusable helper utilities under `backend/pkg/utils/` in the appropriate package.
+- Put public/shared Go types in the top-level `server/types/` module.
+- Put reusable helper utilities under `server/backend/pkg/utils/` in the appropriate package.
 - Add tests only for new functionality. For bug fixes and refactors, update existing
   tests when necessary and run relevant existing coverage; do not add regression tests.
 - Never add handler tests. Test new business behavior at the service layer or in its
@@ -36,19 +36,19 @@ headless agent modes, and a Cobra CLI.
 The Go workspace contains three modules:
 
 ```text
-backend/   Go application, HTTP API, domain logic, jobs, and embedded frontend
-cli/       Cobra CLI and its API client
-types/     Public domain and API contracts shared by backend and CLI
+server/backend/   Go application, HTTP API, domain logic, jobs, and embedded frontend
+clients/cli/       Cobra CLI and its API client
+server/types/     Public domain and API contracts shared by backend and CLI
 ```
 
-The frontend lives in `frontend/`. End-to-end tests live in `tests/`.
+The frontend lives in `clients/webapp/svelte/`. End-to-end tests live in `pipes/gates/`.
 
 ### Backend
 
 The backend uses domain-oriented vertical slices:
 
 ```text
-backend/
+server/backend/
 ├── cmd/                 process entrypoint
 ├── api/                 API assembly and exceptional HTTP/stream/WebSocket routes
 ├── internal/
@@ -63,7 +63,7 @@ backend/
 └── frontend/            embedded frontend build
 ```
 
-Domains under `backend/internal/<domain>/` own their behavior and routes:
+Domains under `server/backend/internal/<domain>/` own their behavior and routes:
 
 - `module.go` wires the domain and registers its routes. Expose services or handlers
   only when collaborators need them, following the existing module's pattern.
@@ -92,20 +92,20 @@ patterns for wrapped or semantic errors.
 
 Before adding backend logic, search the owning domain plus:
 
-- `backend/pkg/dockerutil` for Docker names, labels, clients, logs, and stream helpers.
-- `backend/pkg/projects` for Compose parsing, discovery, and image references.
-- `backend/pkg/pagination` for in-memory and database pagination.
-- `backend/pkg/libarcane` for reusable Arcane engines and transport behavior.
-- `backend/pkg/utils` for shared infrastructure utilities.
+- `server/backend/pkg/dockerutil` for Docker names, labels, clients, logs, and stream helpers.
+- `server/backend/pkg/projects` for Compose parsing, discovery, and image references.
+- `server/backend/pkg/pagination` for in-memory and database pagination.
+- `server/backend/pkg/libarcane` for reusable Arcane engines and transport behavior.
+- `server/backend/pkg/utils` for shared infrastructure utilities.
 
 Persistence models use `database.BaseModel` and existing database helpers where
 appropriate. Reuse GORM relationships and `Preload`; keep persistence models separate
-from public API contracts in `types/`.
+from public API contracts in `server/types/`.
 
 ### CLI and shared types
 
 ```text
-cli/
+clients/cli/
 ├── main.go              CLI entrypoint
 ├── pkg/                 Cobra root and domain command packages
 └── internal/
@@ -115,21 +115,21 @@ cli/
     ├── output/          output rendering
     └── ...              prompts, runtime state, and other internal support
 
-types/                   shared domain and API contracts, grouped by domain
+server/types/                   shared domain and API contracts, grouped by domain
 ```
 
 Update existing commands and reuse the CLI client, configuration, and output code.
 Keep commands focused on input, API calls, and output; backend business behavior
-belongs in its owning backend domain. Keep shared contracts in `types/` independent
+belongs in its owning backend domain. Keep shared contracts in `server/types/` independent
 of backend persistence and application wiring.
 
 ### Frontend
 
 The frontend is SvelteKit v3 on Svelte 5. Configuration lives in
-`frontend/vite.config.ts`.
+`clients/webapp/svelte/vite.config.ts`.
 
 ```text
-frontend/src/
+clients/webapp/svelte/src/
 ├── routes/              SvelteKit pages and layouts
 └── lib/
     ├── components/      shared UI components
@@ -150,7 +150,7 @@ frontend/src/
 - Use precise TypeScript types. Do not introduce `any`.
 - Reuse shared components before creating page-local variants.
 - Put every rendered string behind Paraglide messages.
-- Reuse a matching key from `frontend/messages/en.json` before adding one.
+- Reuse a matching key from `clients/webapp/svelte/messages/en.json` before adding one.
 - Add new keys only to `en.json`; Crowdin manages every other locale.
 - Generate Paraglide output through the existing tooling; do not edit it by hand.
 

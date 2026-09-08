@@ -10,7 +10,7 @@ import {
 import { readApiData } from '../utils/fetch.util';
 
 const AVATAR_PATH = fileURLToPath(
-	new URL('../../backend/resources/images/icon-128x128.png', import.meta.url)
+	new URL('../../../server/backend/resources/images/icon-128x128.png', import.meta.url)
 );
 
 type UserPreferences = {

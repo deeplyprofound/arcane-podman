@@ -55,8 +55,8 @@ services:
     build:
       args:
         - BUILD_TAGS=playwright
-      context: ../..
-      dockerfile: docker/Dockerfile
+      context: ../../..
+      dockerfile: pipes/deployment/docker/Dockerfile
 
 volumes:
   arcane_data:

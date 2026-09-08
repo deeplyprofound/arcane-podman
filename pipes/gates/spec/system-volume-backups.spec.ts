@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '../fixtures/test.fixture';
-import type { Activity } from '../../frontend/src/lib/types/activity.type';
+import type { Activity } from '../../../clients/webapp/svelte/src/lib/types/activity.type';
 
 type ManagementType = 'system' | 'volume';
 

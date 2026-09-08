@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { colors, fonts } from './theme';
 
-const outputDir = '../backend/resources/email-templates';
+const outputDir = '../server/backend/resources/email-templates';
 
 if (!fs.existsSync(outputDir)) {
 	fs.mkdirSync(outputDir, { recursive: true });
