@@ -1,5 +1,5 @@
 {
-  "name": "Arcane Dev Container",
+  "name": "Arcane-Podman Dev Container",
   "dockerComposeFile": "compose.yaml",
   "service": "arcane-dev-container",
   "workspaceFolder": "/workspace",
@@ -48,7 +48,7 @@
   "postCreateCommand": "just deps install all",
   "remoteUser": "root",
   "containerEnv": {
-    "TZ": "Pacific/Auckland"
+    "TZ": "America/New_York"
   },
   "remoteEnv": {
     "HOST_PROJECT_ROOT": "${localWorkspaceFolder}"
