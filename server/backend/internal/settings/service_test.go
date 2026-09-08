@@ -120,7 +120,7 @@ func TestSettingsService_EnsureDefaultSettings_Idempotent(t *testing.T) {
 		case "trivyDbRegistry":
 			require.Equal(t, "ghcr.io", sv.Value)
 		case "lifecycleDefaultRunnerImage":
-			require.Equal(t, "alpine:latest", sv.Value)
+			require.Equal(t, "docker.io/library/alpine:latest", sv.Value)
 		case "trivyNetwork":
 			require.Empty(t, sv.Value)
 		case "trivySecurityOpts":

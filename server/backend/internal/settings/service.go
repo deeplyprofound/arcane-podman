@@ -281,7 +281,7 @@ func DefaultSettingsConfig() *Settings {
 		GitSyncMaxBinarySizeMb:         SettingVariable{Value: "10"},
 		EnvironmentHealthInterval:      SettingVariable{Value: "0 */2 * * * *"},
 		LifecycleEnabled:               SettingVariable{Value: "false"},
-		LifecycleDefaultRunnerImage:    SettingVariable{Value: "alpine:latest"},
+		LifecycleDefaultRunnerImage:    SettingVariable{Value: "docker.io/library/alpine:latest"},
 		LifecycleMaxTimeoutSec:         SettingVariable{Value: "300"},
 
 		DockerAPITimeout:       SettingVariable{Value: "30"},
